@@ -48,21 +48,38 @@ IMAGE_RE = re.compile(rf"({OWNER}_[0-9a-f]{{32}}~mv2\.(?:jpe?g|png|webp|gif))", 
 VIDEO_RE = re.compile(rf"({OWNER}_[0-9a-f]{{32}})/(\d+)p/mp4/file\.mp4", re.I)
 
 
-def fetch(url, retries=3):
-    """Holt eine Adresse und gibt die Bytes zurück, mit ein paar Wiederholungen."""
+# Wix bremst zu viele Anfragen in kurzer Zeit mit "429 Too Many Requests" aus.
+# Deshalb Pausen zwischen den Anfragen und geduldiges Warten, wenn es doch passiert.
+PAUSE_BETWEEN_DOWNLOADS = 1.5  # Sekunden
+PAUSE_BETWEEN_PAGES = 10
+WAIT_ON_429 = [30, 60, 120, 240]  # Wartezeiten vor dem 2., 3., ... Versuch
+
+
+def fetch(url):
+    """Holt eine Adresse und gibt die Bytes zurück."""
     request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
-    for attempt in range(1, retries + 1):
+    attempts = len(WAIT_ON_429) + 1
+    for attempt in range(1, attempts + 1):
         try:
             with urllib.request.urlopen(request, timeout=60) as response:
                 return response.read()
         except urllib.error.HTTPError as error:
-            # 4xx ändert sich durch Wiederholen nicht.
-            if 400 <= error.code < 500 or attempt == retries:
+            if attempt == attempts:
                 raise
+            if error.code == 429:
+                # Nennt Wix selbst eine Wartezeit, gilt die.
+                announced = error.headers.get("Retry-After", "") if error.headers else ""
+                wait = int(announced) if announced.isdigit() else WAIT_ON_429[attempt - 1]
+                print(f"   Wix bremst (429), warte {wait} s ...", flush=True)
+            elif 400 <= error.code < 500:
+                raise  # z. B. 404 ändert sich durch Wiederholen nicht
+            else:
+                wait = 5 * attempt
         except (urllib.error.URLError, TimeoutError):
-            if attempt == retries:
+            if attempt == attempts:
                 raise
-        time.sleep(2 * attempt)
+            wait = 5 * attempt
+        time.sleep(wait)
 
 
 class ImgCollector(HTMLParser):
@@ -112,6 +129,7 @@ def download(url, target):
         data = fetch(url)
     except Exception as error:  # ein kaputtes Bild soll den Rest nicht aufhalten
         return f"FEHLER {error}"
+    time.sleep(PAUSE_BETWEEN_DOWNLOADS)
     partial = target.with_name(target.name + ".part")
     partial.write_bytes(data)
     partial.rename(target)
@@ -123,8 +141,10 @@ def main():
     manifest = {"site": SITE, "pages": {}}
     errors = 0
 
-    for name, path in PAGES.items():
-        print(f"\n== {name} ({SITE}{path})")
+    for number, (name, path) in enumerate(PAGES.items()):
+        if number:
+            time.sleep(PAUSE_BETWEEN_PAGES)
+        print(f"\n== {name} ({SITE}{path})", flush=True)
         try:
             html = fetch(SITE + path).decode("utf-8", errors="replace")
         except Exception as error:
