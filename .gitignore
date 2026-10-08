@@ -18,3 +18,6 @@ __pycache__/
 .DS_Store
 .idea/
 .vscode/
+
+# Von scripts/fetch_wix_images.py heruntergeladene Fotos
+/wix_import/

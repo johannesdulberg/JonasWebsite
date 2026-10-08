@@ -10,3 +10,4 @@
 /* Erzeugte und hochgeladene Dateien nicht durchsuchen. */
 @source not "../../static";
 @source not "../../media";
+@source not "../../wix_import";
