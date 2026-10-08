@@ -13,16 +13,40 @@
 @source not "../../wix_import";
 
 /*
-  Farben und Schrift der Seite an einer Stelle. Vorläufige Werte, bis das
-  Aussehen anhand der Screenshots feststeht. In Templates als Klassen nutzbar,
-  z. B. bg-paper, text-ink, text-muted, border-line.
+  Schriften liegen als Dateien im Projekt (config/static/fonts) und werden vom
+  eigenen Server geladen, nicht von Google oder Wix (DSGVO). Beide stehen unter
+  der freien Lizenz OFL. Es sind variable Schriften: eine Datei, alle Stärken.
+*/
+@font-face {
+  font-family: "Montserrat";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("../fonts/montserrat-latin-wght-normal.woff2") format("woff2-variations");
+}
+
+@font-face {
+  font-family: "Nunito Sans";
+  font-style: normal;
+  font-weight: 200 1000;
+  font-display: swap;
+  src: url("../fonts/nunito-sans-latin-wght-normal.woff2") format("woff2-variations");
+}
+
+/*
+  Farben und Schriften der Seite an einer Stelle, abgelesen aus den Screenshots
+  der Wix-Seite. In Templates als Klassen nutzbar, z. B. bg-paper, text-ink,
+  text-accent, font-display.
 */
 @theme {
   --color-paper: #ffffff;
-  --color-ink: #141414;
+  --color-ink: #000000;
+  --color-accent: #894240; /* aktiver Menüpunkt, Hover */
   --color-muted: #6b6b6b;
   --color-line: #e6e6e6;
 
-  /* Systemschriften: keine Schriftdateien von fremden Servern (DSGVO), keine Ladezeit. */
-  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  /* Fließtext und Navigation. Avenir nur als Ersatz, falls die Schriftdatei nicht lädt. */
+  --font-sans: "Nunito Sans", "Avenir Next", Avenir, ui-sans-serif, system-ui, sans-serif;
+  /* Schriftzug im Kopf. */
+  --font-display: "Montserrat", ui-sans-serif, system-ui, sans-serif;
 }

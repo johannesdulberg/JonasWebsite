@@ -1,19 +1,19 @@
 {% load core_tags %}
 {% with site_settings=settings.core.SiteSettings %}
-<header class="border-b border-line">
-    <div class="mx-auto flex max-w-screen-2xl flex-wrap items-center justify-between gap-x-10 gap-y-4 px-5 py-5 md:px-10 md:py-7">
+<header>
+    <div class="mx-auto flex max-w-screen-2xl flex-col items-center px-5 pb-6 pt-8 text-center md:px-10 md:pt-9">
         <a href="/" class="block">
-            <span class="block text-lg font-medium uppercase tracking-[0.25em] md:text-xl">{{ site_settings.brand_name }}</span>
+            <span class="block font-display text-2xl font-extrabold uppercase leading-none tracking-[0.2em] sm:text-3xl">{{ site_settings.brand_name }}</span>
             {% if site_settings.tagline %}
-            <span class="mt-1 block text-xs tracking-wide text-muted">{{ site_settings.tagline }}</span>
+            <span class="mt-2 block text-xs tracking-[0.25em] sm:text-sm">{{ site_settings.tagline }}</span>
             {% endif %}
         </a>
 
         {# Nur auf schmalen Bildschirmen sichtbar. Das Auf- und Zuklappen macht site.js. #}
         <button type="button" data-nav-toggle aria-controls="main-nav" aria-expanded="false"
-                class="-mr-2 p-2 text-xs uppercase tracking-[0.2em] md:hidden">Menü</button>
+                class="mt-5 px-3 py-2 text-sm uppercase tracking-wide md:hidden">Menü</button>
 
-        <nav id="main-nav" aria-label="Hauptnavigation" class="hidden w-full pb-2 pt-4 md:block md:w-auto md:p-0">
+        <nav id="main-nav" aria-label="Hauptnavigation" class="hidden pt-3 md:block md:pt-7">
             {% main_nav %}
         </nav>
     </div>

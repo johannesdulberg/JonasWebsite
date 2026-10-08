@@ -39,9 +39,22 @@ Status: **offen** = noch nicht besprochen, **bestätigt** = bleibt so,
 - **Rückbau:** mittel.
 - **Status:** offen
 
+### 4. Schriften: frei lizenzierte Entsprechungen, vom eigenen Server
+
+- **Bei Wix:** ein fetter, geometrischer Schriftzug und eine leichte Schrift im
+  Stil von Avenir für Untertitel und Menü, ausgeliefert von Wix-Servern.
+- **Jetzt:** Montserrat (Schriftzug) und Nunito Sans (alles andere), als
+  Dateien im Projekt. Geräte, die Avenir selbst mitbringen (Mac, iPhone),
+  sehen trotzdem Nunito Sans, damit die Seite überall gleich aussieht.
+- **Warum:** Avenir ist eine kostenpflichtige Schrift, die Lizenz steckt im
+  Wix-Abo und gilt nicht für einen eigenen Server. Beide Ersatzschriften sind
+  frei (OFL) und kommen dem Original nahe. Vom eigenen Server geladen, geht
+  keine Besucher-IP an Dritte (DSGVO).
+- **Rückbau:** klein, wenn eine Lizenz für die Originalschriften gekauft wird:
+  Dateien austauschen, zwei Zeilen in `config/static_src/tailwind.css`.
+- **Status:** offen
+
 ## Offene Punkte (noch keine Abweichung)
 
-- **Farben und Schrift** sind vorläufig (weißer Hintergrund, fast schwarzer
-  Text, Systemschrift), weil mir das Aussehen der Wix-Seite noch nicht
-  vorliegt. Die Werte stehen gesammelt in `config/static_src/tailwind.css`
-  und werden anhand der Screenshots angepasst.
+- **Fußzeile:** Inhalt stimmt, die Anordnung ist geraten, weil mir davon noch
+  kein Screenshot vorliegt.

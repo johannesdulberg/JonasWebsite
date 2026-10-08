@@ -34,7 +34,7 @@
         <div class="mx-auto flex max-w-screen-2xl flex-wrap justify-between gap-x-8 gap-y-2 px-5 py-5 text-xs text-muted md:px-10">
             <span>© {% now "Y" %} {{ site_settings.brand_name }}</span>
             {% if site_settings.legal_page %}
-            <a class="underline-offset-4 hover:text-ink hover:underline" href="{% pageurl site_settings.legal_page %}">{{ site_settings.legal_link_text }}</a>
+            <a class="underline-offset-4 hover:text-accent hover:underline" href="{% pageurl site_settings.legal_page %}">{{ site_settings.legal_link_text }}</a>
             {% endif %}
         </div>
     </div>
