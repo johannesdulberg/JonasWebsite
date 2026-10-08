@@ -8,7 +8,10 @@ Ergebnis: Ordner wix_import/ mit einem Unterordner pro Seite und einer
 manifest.json, die Reihenfolge, Alt-Texte und Herkunft festhält. Der Ordner
 steht in .gitignore, die Fotos landen also nicht im Repo.
 
-Das Skript kann beliebig oft laufen, vorhandene Dateien lädt es nicht erneut.
+Das Skript kann beliebig oft laufen. Vorhandene Dateien lädt es nicht erneut,
+und Seiten, die schon vollständig in der manifest.json stehen, fragt es nicht
+noch einmal ab. Mit --neu liest es alle Seiten frisch von Wix, zum Beispiel
+wenn dort Bilder dazugekommen sind.
 
 Hintergrund: Wix liefert Bilder verkleinert aus, über Adressen wie
     https://static.wixstatic.com/media/<id>~mv2.jpg/v1/fill/w_160,h_456,.../<name>.jpg
@@ -138,12 +141,29 @@ def download(url, target):
 
 def main():
     OUT_DIR.mkdir(exist_ok=True)
+    manifest_file = OUT_DIR / "manifest.json"
+    force = "--neu" in sys.argv
+
+    # Ergebnis früherer Läufe. Seiten, die dort schon vollständig stehen, werden
+    # nicht noch einmal bei Wix abgefragt (außer mit --neu).
+    known = {}
+    if manifest_file.exists() and not force:
+        known = json.loads(manifest_file.read_text()).get("pages", {})
+
     manifest = {"site": SITE, "pages": {}}
     errors = 0
+    requested = False
 
-    for number, (name, path) in enumerate(PAGES.items()):
-        if number:
+    for name, path in PAGES.items():
+        previous = known.get(name)
+        if previous and all((OUT_DIR / item["file"]).exists() for item in previous["items"]):
+            manifest["pages"][name] = previous
+            print(f"\n== {name}: bereits vollständig, übersprungen", flush=True)
+            continue
+
+        if requested:
             time.sleep(PAUSE_BETWEEN_PAGES)
+        requested = True
         print(f"\n== {name} ({SITE}{path})", flush=True)
         try:
             html = fetch(SITE + path).decode("utf-8", errors="replace")
@@ -188,7 +208,7 @@ def main():
         manifest["pages"][name] = {"path": path, "items": entries}
         print(f"   -> {len(images)} Bilder, {len(videos)} Videos")
 
-    (OUT_DIR / "manifest.json").write_text(json.dumps(manifest, indent=2, ensure_ascii=False) + "\n")
+    manifest_file.write_text(json.dumps(manifest, indent=2, ensure_ascii=False) + "\n")
 
     print("\nZusammenfassung")
     for name, page in manifest["pages"].items():
