@@ -6,6 +6,7 @@ config/settings/local.py
 /static/
 /media/
 *.sqlite3
+config/static/css/tailwind.css
 
 # Python
 __pycache__/

@@ -1,0 +1,12 @@
+/*
+  Eingabedatei für Tailwind. Daraus entsteht config/static/css/tailwind.css
+  (nicht im Repo, wird beim Bauen bzw. vom tailwind-Container erzeugt).
+
+  source("../..") legt fest, wo Tailwind nach verwendeten Klassen sucht:
+  im ganzen Projektordner, also in allen Templates und Python-Dateien.
+*/
+@import "tailwindcss" source("../..");
+
+/* Erzeugte und hochgeladene Dateien nicht durchsuchen. */
+@source not "../../static";
+@source not "../../media";

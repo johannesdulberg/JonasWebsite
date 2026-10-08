@@ -20,6 +20,8 @@ docker compose exec web python manage.py createsuperuser
 
 Das ist die Entwicklungsvariante: Der Code-Ordner ist in den Container eingehängt, Änderungen wirken sofort. Migrationen laufen bei jedem Start automatisch.
 
+Das CSS kommt von Tailwind. Der Container `tailwind` beobachtet die Templates und schreibt bei jeder Änderung `config/static/css/tailwind.css` neu. Eigene CSS-Regeln und Tailwind-Einstellungen gehören in `config/static_src/tailwind.css`.
+
 ## Wie auf dem Server (mit nginx und gunicorn)
 
 ```
@@ -50,6 +52,7 @@ Vorher `docker compose down`, weil beide Varianten dieselben Containernamen benu
 | `Dockerfile`, `docker-entrypoint.sh` | Image der Anwendung und Startskript (Migrationen, statische Dateien) |
 | `compose.yaml` | Die drei Container wie auf dem Server |
 | `compose.override.yaml` | Abweichungen für die Entwicklung, wird automatisch dazugeladen |
+| `config/static_src/tailwind.css` | Eingabedatei für Tailwind |
 | `nginx/default.conf` | nginx-Konfiguration |
 | `.env` | Geheimnisse und Einstellungen pro Umgebung, nicht im Repo (Vorlage: `.env.example`) |
 

@@ -12,6 +12,14 @@ services:
     volumes:
       - .:/app
 
+  # Baut das CSS bei jeder Änderung an Templates oder an tailwind.css neu.
+  tailwind:
+    build: .
+    entrypoint: []
+    command: tailwindcss -i config/static_src/tailwind.css -o config/static/css/tailwind.css --watch=always
+    volumes:
+      - .:/app
+
   # nginx wird in der Entwicklung nicht gebraucht.
   nginx:
     profiles: ["nginx"]
