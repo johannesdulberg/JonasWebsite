@@ -1,0 +1,12 @@
+.git
+.env
+/media/
+/static/
+*.sqlite3
+__pycache__
+*.pyc
+.DS_Store
+/venv/
+/.venv/
+.idea/
+.vscode

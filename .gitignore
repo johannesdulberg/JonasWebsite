@@ -1,0 +1,19 @@
+# Geheimnisse und lokale Einstellungen
+.env
+config/settings/local.py
+
+# Von Django erzeugt
+/static/
+/media/
+*.sqlite3
+
+# Python
+__pycache__/
+*.pyc
+/venv/
+/.venv/
+
+# Editor / System
+.DS_Store
+.idea/
+.vscode/

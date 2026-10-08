@@ -1,0 +1,17 @@
+# Entwicklungsvariante, wird von "docker compose up" automatisch dazugeladen.
+# Der Code-Ordner ist in den Container eingehängt, Änderungen wirken sofort.
+# Seite: http://localhost:8000
+
+services:
+  web:
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings.dev
+    command: python manage.py runserver 0.0.0.0:8000
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+
+  # nginx wird in der Entwicklung nicht gebraucht.
+  nginx:
+    profiles: ["nginx"]
