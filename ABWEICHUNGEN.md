@@ -17,7 +17,7 @@ Status: **offen** = noch nicht besprochen, **bestätigt** = bleibt so,
   jede ein Icon im Code hinterlegt sein muss. Text ist außerdem für
   Screenreader eindeutig und passt zur reduzierten Typografie.
 - **Rückbau:** klein. Icons als SVG hinterlegen und pro Link auswählbar machen.
-- **Status:** offen
+- **Status:** wird zurückgenommen (Entscheidung vom 08.10.2026: Icons), Umsetzung steht in TODO.md
 
 ### 2. Jahr im Copyright aktualisiert sich selbst
 
