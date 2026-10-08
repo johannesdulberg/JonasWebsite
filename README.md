@@ -22,6 +22,19 @@ Das ist die Entwicklungsvariante: Der Code-Ordner ist in den Container eingehän
 
 Das CSS kommt von Tailwind. Der Container `tailwind` beobachtet die Templates und schreibt bei jeder Änderung `config/static/css/tailwind.css` neu. Eigene CSS-Regeln und Tailwind-Einstellungen gehören in `config/static_src/tailwind.css`.
 
+## Inhalte pflegen
+
+- **Navigation:** entsteht aus dem Seitenbaum. Eine Seite erscheint im Menü, wenn sie direkt unter der Startseite liegt, veröffentlicht ist und im Reiter "Werbung" der Haken "In Menüs anzeigen" gesetzt ist. Die Reihenfolge ist die im Seitenbaum.
+- **Kopf- und Fußzeile:** im Admin unter Einstellungen → Kopf- und Fußzeile (Name, Untertitel, Kontakt, Social Media, Impressum-Link, Download).
+
+Wo der Nachbau bewusst von der Wix-Seite abweicht, steht in [ABWEICHUNGEN.md](ABWEICHUNGEN.md).
+
+## Tests
+
+```
+docker compose exec web python manage.py test
+```
+
 ## Wie auf dem Server (mit nginx und gunicorn)
 
 ```
@@ -48,6 +61,7 @@ Vorher `docker compose down`, weil beide Varianten dieselben Containernamen benu
 | Pfad | Inhalt |
 | --- | --- |
 | `config/settings/` | `base.py` gilt immer, `dev.py` für die Entwicklung, `production.py` für den Server |
+| `core/` | Einstellungen für Kopf- und Fußzeile, Navigation |
 | `home/`, `search/` | Apps aus der Wagtail-Vorlage |
 | `Dockerfile`, `docker-entrypoint.sh` | Image der Anwendung und Startskript (Migrationen, statische Dateien) |
 | `compose.yaml` | Die drei Container wie auf dem Server |

@@ -31,13 +31,21 @@
         {% endblock %}
     </head>
 
-    <body class="{% block body_class %}{% endblock %}">
+    <body class="flex min-h-screen flex-col bg-paper text-ink antialiased {% block body_class %}{% endblock %}">
         {% wagtailuserbar %}
 
-        {% block content %}{% endblock %}
+        <a href="#inhalt" class="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:bg-paper focus:px-3 focus:py-2">Zum Inhalt springen</a>
+
+        {% include "includes/header.html" %}
+
+        <main id="inhalt" class="flex-1">
+            {% block content %}{% endblock %}
+        </main>
+
+        {% include "includes/footer.html" %}
 
         {# Global javascript #}
-        <script type="text/javascript" src="{% static 'js/config.js' %}"></script>
+        <script src="{% static 'js/site.js' %}" defer></script>
 
         {% block extra_js %}
         {# Override this in templates to add extra javascript #}

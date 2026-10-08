@@ -1,0 +1,10 @@
+{% load wagtailcore_tags %}
+<ul class="flex flex-col gap-y-4 md:flex-row md:gap-x-8">
+    {% for item in items %}
+    <li>
+        <a href="{% pageurl item.page %}"
+           class="text-xs uppercase tracking-[0.2em] underline-offset-8 hover:underline {% if item.active %}text-ink underline{% else %}text-muted hover:text-ink{% endif %}"
+           {% if item.active %}aria-current="page"{% endif %}>{{ item.page.title }}</a>
+    </li>
+    {% endfor %}
+</ul>

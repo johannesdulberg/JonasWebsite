@@ -1,0 +1,42 @@
+{% load wagtailcore_tags %}
+{% with site_settings=settings.core.SiteSettings %}
+<footer class="mt-24 border-t border-line text-sm">
+    <div class="mx-auto grid max-w-screen-2xl gap-10 px-5 py-12 md:grid-cols-3 md:px-10">
+        <address class="not-italic leading-relaxed">
+            {% if site_settings.contact_name %}<span class="block">{{ site_settings.contact_name }}</span>{% endif %}
+            {% if site_settings.street %}<span class="block">{{ site_settings.street }}</span>{% endif %}
+            {% if site_settings.postal_code_city %}<span class="block">{{ site_settings.postal_code_city }}</span>{% endif %}
+            {% if site_settings.email %}
+            <a class="mt-4 block underline-offset-4 hover:underline" href="mailto:{{ site_settings.email }}">{{ site_settings.email }}</a>
+            {% endif %}
+            {% if site_settings.phone %}
+            <a class="block underline-offset-4 hover:underline" href="tel:{{ site_settings.phone|cut:' ' }}">{{ site_settings.phone }}</a>
+            {% endif %}
+        </address>
+
+        {% if site_settings.footer_download %}
+        <div class="leading-relaxed md:col-start-2">
+            <a class="block underline-offset-4 hover:underline" href="{{ site_settings.footer_download.url }}" download>
+                {{ site_settings.footer_download_text|default:site_settings.footer_download.title }}
+                <span class="text-muted">(Download)</span>
+            </a>
+        </div>
+        {% endif %}
+
+        <ul class="flex flex-col gap-y-1 md:col-start-3 md:items-end">
+            {% for link in site_settings.social_links.all %}
+            <li><a class="underline-offset-4 hover:underline" href="{{ link.url }}" rel="noopener me">{{ link.label }}</a></li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <div class="border-t border-line">
+        <div class="mx-auto flex max-w-screen-2xl flex-wrap justify-between gap-x-8 gap-y-2 px-5 py-5 text-xs text-muted md:px-10">
+            <span>© {% now "Y" %} {{ site_settings.brand_name }}</span>
+            {% if site_settings.legal_page %}
+            <a class="underline-offset-4 hover:text-ink hover:underline" href="{% pageurl site_settings.legal_page %}">{{ site_settings.legal_link_text }}</a>
+            {% endif %}
+        </div>
+    </div>
+</footer>
+{% endwith %}

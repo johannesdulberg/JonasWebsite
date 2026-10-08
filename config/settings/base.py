@@ -25,9 +25,11 @@ BASE_DIR = PROJECT_DIR.parent
 # Application definition
 
 INSTALLED_APPS = [
+    "core",
     "home",
     "search",
     "wagtail.contrib.forms",
+    "wagtail.contrib.settings",
     "wagtail.contrib.redirects",
     "wagtail.embeds",
     "wagtail.sites",
@@ -75,6 +77,8 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                # Stellt die Einstellungen aus dem Admin in Templates bereit (settings.core.SiteSettings).
+                "wagtail.contrib.settings.context_processors.settings",
             ],
         },
     },

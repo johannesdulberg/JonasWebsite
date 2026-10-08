@@ -11,3 +11,18 @@
 @source not "../../static";
 @source not "../../media";
 @source not "../../wix_import";
+
+/*
+  Farben und Schrift der Seite an einer Stelle. Vorläufige Werte, bis das
+  Aussehen anhand der Screenshots feststeht. In Templates als Klassen nutzbar,
+  z. B. bg-paper, text-ink, text-muted, border-line.
+*/
+@theme {
+  --color-paper: #ffffff;
+  --color-ink: #141414;
+  --color-muted: #6b6b6b;
+  --color-line: #e6e6e6;
+
+  /* Systemschriften: keine Schriftdateien von fremden Servern (DSGVO), keine Ladezeit. */
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+}
