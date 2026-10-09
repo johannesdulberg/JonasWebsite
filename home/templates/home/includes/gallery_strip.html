@@ -1,0 +1,37 @@
+{% load wagtailimages_tags %}
+{% comment %}
+Eine waagerecht scrollende Bildreihe.
+
+  items: Galerie-Einträge (jeweils mit .image)
+  size:  "large" oder "small"
+  label: Name für Screenreader
+
+Breite und Abstand wachsen mit dem Bildschirm zwischen Handy- und Desktop-Maß
+(clamp). Die Pfeile und das Ein-/Ausblenden macht site.js; ohne JavaScript
+lässt sich die Reihe trotzdem wischen und scrollen.
+
+Die Bildgrößen hier müssen zu HomePage.TOP_RENDITIONS / BOTTOM_RENDITIONS passen.
+{% endcomment %}
+<div class="relative" data-strip>
+    <ul data-strip-track tabindex="0" aria-label="{{ label }}"
+        class="no-scrollbar flex snap-x overflow-x-auto scroll-smooth {% if size == "large" %}gap-[clamp(15px,4.3vw,42px)]{% else %}gap-[clamp(15px,3.06vw,30px)]{% endif %}">
+        {% for item in items %}
+        <li class="shrink-0 snap-start {% if size == "large" %}w-[clamp(76px,16.33vw,160px)]{% else %}w-[clamp(57px,10.3vw,101px)]{% endif %}">
+            {% if size == "large" %}
+            {% srcset_image item.image fill-{160x456,320x912} format-webp sizes="(min-width: 980px) 160px, 20vw" alt=item.image.description loading="lazy" class="block h-auto w-full" %}
+            {% else %}
+            {% srcset_image item.image fill-{101x289,202x578,303x867} format-webp sizes="(min-width: 980px) 101px, 15vw" alt=item.image.description loading="lazy" class="block h-auto w-full" %}
+            {% endif %}
+        </li>
+        {% endfor %}
+    </ul>
+
+    <button type="button" data-strip-prev hidden aria-label="Zurück"
+            class="absolute inset-y-0 left-0 flex w-12 items-center justify-center text-white drop-shadow-[0_0_3px_rgb(0_0_0/0.6)] transition-opacity hover:opacity-70">
+        <svg class="size-9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="M15 4l-8 8 8 8" /></svg>
+    </button>
+    <button type="button" data-strip-next hidden aria-label="Weiter"
+            class="absolute inset-y-0 right-0 flex w-12 items-center justify-center text-white drop-shadow-[0_0_3px_rgb(0_0_0/0.6)] transition-opacity hover:opacity-70">
+        <svg class="size-9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="M9 4l8 8-8 8" /></svg>
+    </button>
+</div>

@@ -3,9 +3,25 @@
 {% block body_class %}template-homepage{% endblock %}
 
 {% block content %}
-{# Platzhalter, bis die Startseite gebaut ist. #}
-<div class="mx-auto max-w-screen-2xl px-5 py-24 md:px-10">
-    <h1 class="sr-only">{{ page.title }}</h1>
-    <p class="text-sm text-muted">Hier entsteht die Startseite.</p>
+<h1 class="sr-only">{{ page.title }}</h1>
+
+{% with top=page.top_gallery_images.all bottom=page.bottom_gallery_images.all %}
+{% if top or bottom %}
+{# Auf dem Handy reichen die Galerien bis an den Rand, ab 980 px sind sie mittig begrenzt wie bei Wix. #}
+<div class="mx-auto max-w-[980px]">
+    {% if top %}
+    {% include "home/includes/gallery_strip.html" with items=top size="large" label="Galerie 1" %}
+    {% endif %}
+    {% if bottom %}
+    <div class="mt-[clamp(14px,3.3vw,32px)]">
+        {% include "home/includes/gallery_strip.html" with items=bottom size="small" label="Galerie 2" %}
+    </div>
+    {% endif %}
 </div>
+{% else %}
+<div class="mx-auto max-w-screen-2xl px-6 py-24 sm:px-8 md:px-10">
+    <p class="text-sm text-muted">Diese Seite hat noch keinen Inhalt.</p>
+</div>
+{% endif %}
+{% endwith %}
 {% endblock content %}

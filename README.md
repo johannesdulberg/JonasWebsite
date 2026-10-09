@@ -21,6 +21,13 @@ Seiten, Kopf- und Fußzeile nach Vorbild der bisherigen Seite anlegen (einmalig,
 docker compose exec web python manage.py seed_site
 ```
 
+Fotos der bisherigen Seite laden und in die Galerien der Startseite übernehmen:
+
+```
+docker compose exec web python scripts/fetch_wix_images.py
+docker compose exec web python manage.py import_wix
+```
+
 - Seite: http://localhost:8000
 - Wagtail-Admin: http://localhost:8000/admin/
 
@@ -31,6 +38,7 @@ Das CSS kommt von Tailwind. Der Container `tailwind` beobachtet die Templates un
 ## Inhalte pflegen
 
 - **Navigation:** entsteht aus dem Seitenbaum. Eine Seite erscheint im Menü, wenn sie direkt unter der Startseite liegt, veröffentlicht ist und im Reiter "Werbung" der Haken "In Menüs anzeigen" gesetzt ist. Die Reihenfolge ist die im Seitenbaum.
+- **Galerien der Startseite:** unter Seiten → Home bearbeiten. Es gibt zwei Bereiche (obere und untere Galerie); dort lassen sich mehrere Bilder auf einmal auswählen und per Ziehen sortieren. Welcher Teil eines Fotos im Hochformat sichtbar bleibt, bestimmt der Fokuspunkt, den man beim Bild selbst setzt (Bilder → Bild anklicken → Fokuspunkt aufziehen).
 - **Kopf- und Fußzeile:** im Admin unter Einstellungen → Kopf- und Fußzeile (Name, Untertitel, Kontakt, Social Media, Impressum-Link, Download). Bei Social-Media-Links eine Plattform wählen, dann erscheint das Icon; ohne Plattform wird es ein Textlink.
 
 Wo der Nachbau bewusst von der Wix-Seite abweicht, steht in [ABWEICHUNGEN.md](ABWEICHUNGEN.md).
@@ -68,7 +76,8 @@ Vorher `docker compose down`, weil beide Varianten dieselben Containernamen benu
 | --- | --- |
 | `config/settings/` | `base.py` gilt immer, `dev.py` für die Entwicklung, `production.py` für den Server |
 | `core/` | Einstellungen für Kopf- und Fußzeile, Navigation |
-| `home/`, `search/` | Apps aus der Wagtail-Vorlage |
+| `home/` | Startseite mit den beiden Galerien, Import der Wix-Fotos |
+| `search/` | Suche aus der Wagtail-Vorlage |
 | `Dockerfile`, `docker-entrypoint.sh` | Image der Anwendung und Startskript (Migrationen, statische Dateien) |
 | `compose.yaml` | Die drei Container wie auf dem Server |
 | `compose.override.yaml` | Abweichungen für die Entwicklung, wird automatisch dazugeladen |

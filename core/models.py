@@ -4,9 +4,34 @@ from modelcluster.fields import ParentalKey
 from modelcluster.models import ClusterableModel
 from wagtail.admin.panels import FieldPanel, InlinePanel, MultiFieldPanel
 from wagtail.contrib.settings.models import BaseSiteSetting, register_setting
+from wagtail.images.models import AbstractImage, AbstractRendition, Image
 from wagtail.models import Orderable
 
 from .social_icons import SOCIAL_ICONS
+
+
+class CustomImage(AbstractImage):
+    """Eigenes Bildmodell statt des eingebauten von Wagtail.
+
+    Verhält sich bisher identisch. Der Zweck: Später lassen sich Felder ergänzen
+    (z. B. Bildnachweis), ohne alle Bilder umziehen zu müssen. Der Wechsel des
+    Bildmodells ist nachträglich aufwendig, am Anfang kostet er nichts.
+    """
+
+    admin_form_fields = Image.admin_form_fields
+
+    class Meta(AbstractImage.Meta):
+        verbose_name = "Bild"
+        verbose_name_plural = "Bilder"
+
+
+class CustomRendition(AbstractRendition):
+    """Die von Wagtail erzeugten Größen und Formate eines Bildes."""
+
+    image = models.ForeignKey(CustomImage, on_delete=models.CASCADE, related_name="renditions")
+
+    class Meta:
+        unique_together = (("image", "filter_spec", "focal_point_key"),)
 
 
 @register_setting(icon="cog")

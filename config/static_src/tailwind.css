@@ -50,3 +50,11 @@
   /* Schriftzug im Kopf. */
   --font-display: "Montserrat", ui-sans-serif, system-ui, sans-serif;
 }
+
+/* Scrollbalken ausblenden, Scrollen bleibt möglich (für die Bildreihen). */
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}

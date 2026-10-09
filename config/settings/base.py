@@ -201,6 +201,9 @@ WAGTAILDOCS_EXTENSIONS = [
     "zip",
 ]
 
+# Eigenes Bildmodell, siehe core/models.py.
+WAGTAILIMAGES_IMAGE_MODEL = "core.CustomImage"
+
 # Maximum upload size for images in bytes. Passt zu client_max_body_size in nginx/default.conf.
 WAGTAILIMAGES_MAX_UPLOAD_SIZE = 50 * 1024 * 1024  # 50MB
 
