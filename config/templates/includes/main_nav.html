@@ -1,9 +1,9 @@
 {% load wagtailcore_tags %}
-<ul class="flex flex-col items-center gap-y-4 md:flex-row md:gap-x-10">
+<ul class="flex flex-col gap-y-5 md:flex-row md:flex-wrap md:justify-center md:gap-x-10 md:gap-y-3">
     {% for item in items %}
     <li>
         <a href="{% pageurl item.page %}"
-           class="text-sm uppercase tracking-wide transition-colors hover:text-accent {% if item.active %}text-accent{% endif %}"
+           class="text-base uppercase tracking-wide transition-colors hover:text-accent md:text-sm {% if item.active %}text-accent{% endif %}"
            {% if item.active %}aria-current="page"{% endif %}>{{ item.page.title }}</a>
     </li>
     {% endfor %}

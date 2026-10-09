@@ -24,12 +24,13 @@ Status: **offen** = noch nicht besprochen, **bestätigt** = bleibt so,
 - **Rückbau:** sehr klein (festes Jahr als Feld in den Einstellungen).
 - **Status:** offen
 
-### 3. Navigation: Menü-Knopf auf dem Handy, kein "More"
+### 3. Navigation: kein "More"-Menü auf mittleren Breiten
 
-- **Bei Wix:** Menüpunkte, die nicht in die Zeile passen, wandern in ein
-  "More"-Menü.
-- **Jetzt:** Ab Tablet-Breite stehen alle Punkte nebeneinander. Auf dem Handy
-  gibt es einen Knopf "Menü", der die Liste aufklappt.
+- **Bei Wix:** Auf dem Handy ein Menü-Symbol (drei Striche), das ist jetzt
+  genauso umgesetzt. Auf Breiten dazwischen wandern Menüpunkte, die nicht in
+  die Zeile passen, in ein "More"-Menü.
+- **Jetzt:** Ab Tablet-Breite stehen alle Punkte nebeneinander und brechen bei
+  Platzmangel in eine zweite Zeile um.
 - **Warum:** Ein "More"-Menü versteckt je nach Bildschirmbreite andere Seiten.
   So ist auf jedem Gerät vorhersehbar, was sichtbar ist.
 - **Rückbau:** mittel.
