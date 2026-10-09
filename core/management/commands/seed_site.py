@@ -80,9 +80,6 @@ class Command(BaseCommand):
         if settings.legal_page is None:
             settings.legal_page = Page.objects.get(pk=home.get_children().get(slug="impressum").pk)
 
-        if settings.footer_download is None:
-            settings.footer_download = self.get_wallpaper()
-
         settings.save()
 
         if not settings.social_links.exists():
@@ -90,7 +87,16 @@ class Command(BaseCommand):
                 SocialLink.objects.create(settings=settings, platform=platform, url=url)
             self.stdout.write(self.style.SUCCESS("Social-Media-Links angelegt"))
 
-        self.stdout.write(self.style.SUCCESS("Kopf- und Fußzeile sind befüllt."))
+        self.stdout.write(self.style.SUCCESS("Kontakt, Impressum-Link und Social Media sind eingetragen."))
+
+        # Das Wallpaper kommt zuletzt: Scheitert der Download oder das Speichern,
+        # ist alles andere schon eingetragen.
+        if settings.footer_download is None:
+            wallpaper = self.get_wallpaper()
+            if wallpaper:
+                settings.footer_download = wallpaper
+                settings.save()
+                self.stdout.write(self.style.SUCCESS("Wallpaper als Download eingehängt"))
 
     def get_wallpaper(self):
         """Gibt das Wallpaper als Dokument zurück, lädt es bei Bedarf von der Wix-Seite."""
@@ -100,16 +106,15 @@ class Command(BaseCommand):
             return existing
         try:
             data = download(WALLPAPER_URL)
+            document = Document.objects.create(
+                title=WALLPAPER_TITLE, file=ContentFile(data, name=WALLPAPER_FILENAME)
+            )
         except Exception as error:
             self.stdout.write(
                 self.style.WARNING(
-                    f"Wallpaper nicht geladen ({error}). Später erneut ausführen "
-                    "oder die Datei im Admin unter Dokumente hochladen."
+                    f"Wallpaper nicht eingehängt ({type(error).__name__}: {error}). Später erneut "
+                    "ausführen oder die Datei im Admin unter Dokumente hochladen."
                 )
             )
             return None
-        document = Document.objects.create(
-            title=WALLPAPER_TITLE, file=ContentFile(data, name=WALLPAPER_FILENAME)
-        )
-        self.stdout.write(self.style.SUCCESS("Wallpaper heruntergeladen"))
         return document
