@@ -15,6 +15,12 @@ In einem zweiten Terminal den Admin-Benutzer anlegen:
 docker compose exec web python manage.py createsuperuser
 ```
 
+Seiten, Kopf- und Fußzeile nach Vorbild der bisherigen Seite anlegen (einmalig, überschreibt nichts):
+
+```
+docker compose exec web python manage.py seed_site
+```
+
 - Seite: http://localhost:8000
 - Wagtail-Admin: http://localhost:8000/admin/
 

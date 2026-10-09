@@ -76,3 +76,58 @@ class SocialLinkTests(TestCase):
         self.assertEqual(link.name, "TikTok")
         self.assertTrue(link.icon_path)
         self.assertEqual(SocialLink(label="Blog", url="https://example.com").icon_path, "")
+
+
+class SeedSiteTests(TestCase):
+    def run_command(self, payload=b"zip"):
+        import tempfile
+        from io import StringIO
+        from unittest import mock
+
+        from django.core.management import call_command
+        from django.test import override_settings
+
+        def fake_download(url):
+            if payload is None:
+                raise OSError("kein Netz")
+            return payload
+
+        with tempfile.TemporaryDirectory() as media, override_settings(MEDIA_ROOT=media):
+            with mock.patch("core.management.commands.seed_site.download", fake_download):
+                call_command("seed_site", stdout=StringIO())
+
+    def test_creates_pages_and_fills_settings(self):
+        self.run_command()
+        site = Site.objects.get(is_default_site=True)
+        menu = site.root_page.get_children().live().in_menu()
+        self.assertEqual(
+            [page.title for page in menu], ["Commercial", "Outdoor", "Other", "Booking", "About"]
+        )
+        settings = SiteSettings.for_site(site)
+        self.assertEqual(settings.postal_code_city, "59494 Soest")
+        self.assertEqual(settings.legal_page.slug, "impressum")
+        self.assertIsNotNone(settings.footer_download)
+        self.assertEqual(
+            [link.platform for link in settings.social_links.all()], ["instagram", "tiktok"]
+        )
+
+    def test_second_run_keeps_manual_changes_and_adds_nothing(self):
+        self.run_command()
+        site = Site.objects.get(is_default_site=True)
+        settings = SiteSettings.for_site(site)
+        settings.phone = "+49 151 111111"
+        settings.save()
+        pages_before = Page.objects.count()
+
+        self.run_command()
+
+        settings = SiteSettings.for_site(site)
+        self.assertEqual(settings.phone, "+49 151 111111")
+        self.assertEqual(Page.objects.count(), pages_before)
+        self.assertEqual(settings.social_links.count(), 2)
+
+    def test_failed_download_does_not_stop_the_rest(self):
+        self.run_command(payload=None)
+        settings = SiteSettings.for_site(Site.objects.get(is_default_site=True))
+        self.assertIsNone(settings.footer_download)
+        self.assertEqual(settings.contact_name, "Jonas Dülberg")
