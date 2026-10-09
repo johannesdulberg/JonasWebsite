@@ -25,7 +25,7 @@ Das CSS kommt von Tailwind. Der Container `tailwind` beobachtet die Templates un
 ## Inhalte pflegen
 
 - **Navigation:** entsteht aus dem Seitenbaum. Eine Seite erscheint im Menü, wenn sie direkt unter der Startseite liegt, veröffentlicht ist und im Reiter "Werbung" der Haken "In Menüs anzeigen" gesetzt ist. Die Reihenfolge ist die im Seitenbaum.
-- **Kopf- und Fußzeile:** im Admin unter Einstellungen → Kopf- und Fußzeile (Name, Untertitel, Kontakt, Social Media, Impressum-Link, Download).
+- **Kopf- und Fußzeile:** im Admin unter Einstellungen → Kopf- und Fußzeile (Name, Untertitel, Kontakt, Social Media, Impressum-Link, Download). Bei Social-Media-Links eine Plattform wählen, dann erscheint das Icon; ohne Plattform wird es ein Textlink.
 
 Wo der Nachbau bewusst von der Wix-Seite abweicht, steht in [ABWEICHUNGEN.md](ABWEICHUNGEN.md).
 

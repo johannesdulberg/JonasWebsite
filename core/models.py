@@ -1,9 +1,12 @@
+from django.core.exceptions import ValidationError
 from django.db import models
 from modelcluster.fields import ParentalKey
 from modelcluster.models import ClusterableModel
 from wagtail.admin.panels import FieldPanel, InlinePanel, MultiFieldPanel
 from wagtail.contrib.settings.models import BaseSiteSetting, register_setting
 from wagtail.models import Orderable
+
+from .social_icons import SOCIAL_ICONS
 
 
 @register_setting(icon="cog")
@@ -82,12 +85,41 @@ class SiteSettings(BaseSiteSetting, ClusterableModel):
 
 
 class SocialLink(Orderable):
+    PLATFORM_CHOICES = [(key, name) for key, (name, _path) in SOCIAL_ICONS.items()]
+
     settings = ParentalKey(SiteSettings, on_delete=models.CASCADE, related_name="social_links")
-    label = models.CharField("Bezeichnung", max_length=50, help_text="Zum Beispiel: Instagram")
+    platform = models.CharField(
+        "Plattform",
+        max_length=30,
+        blank=True,
+        choices=PLATFORM_CHOICES,
+        help_text="Mit Plattform erscheint das passende Icon. Leer lassen für einen Textlink.",
+    )
+    label = models.CharField(
+        "Bezeichnung",
+        max_length=50,
+        blank=True,
+        help_text="Nur nötig ohne Plattform, zum Beispiel: LinkedIn",
+    )
     url = models.URLField("Adresse")
 
-    panels = [FieldPanel("label"), FieldPanel("url")]
+    panels = [FieldPanel("platform"), FieldPanel("url"), FieldPanel("label")]
 
     class Meta(Orderable.Meta):
         verbose_name = "Social-Media-Link"
         verbose_name_plural = "Social-Media-Links"
+
+    def clean(self):
+        super().clean()
+        if not self.platform and not self.label:
+            raise ValidationError({"label": "Ohne Plattform braucht der Link eine Bezeichnung."})
+
+    @property
+    def name(self):
+        """Name für Textlink und Screenreader."""
+        return self.label or self.get_platform_display()
+
+    @property
+    def icon_path(self):
+        """SVG-Pfad des Icons oder leer, wenn der Link als Text erscheinen soll."""
+        return SOCIAL_ICONS[self.platform][1] if self.platform in SOCIAL_ICONS else ""

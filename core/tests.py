@@ -38,7 +38,10 @@ class HeaderFooterTests(TestCase):
         settings.email = "max@example.com"
         settings.phone = "+49 151 000000"
         settings.legal_page = Page.objects.get(pk=self.legal.pk)
-        settings.social_links = [SocialLink(label="Instagram", url="https://instagram.com/example")]
+        settings.social_links = [
+            SocialLink(platform="instagram", url="https://instagram.com/example"),
+            SocialLink(label="LinkedIn", url="https://linkedin.com/in/example"),
+        ]
         settings.save()
 
         html = self.client.get("/").content.decode()
@@ -47,9 +50,29 @@ class HeaderFooterTests(TestCase):
         self.assertIn('href="mailto:max@example.com"', footer)
         self.assertIn('href="tel:+49151000000"', footer)
         self.assertIn('href="/impressum/"', footer)
-        self.assertIn(">Instagram</a>", footer)
+        # Bekannte Plattform: Icon mit Namen für Screenreader, kein sichtbarer Text.
+        self.assertIn('aria-label="Instagram"', footer)
+        self.assertIn("<svg", footer)
+        # Ohne Plattform: Textlink.
+        self.assertIn(">LinkedIn</a>", footer)
 
     def test_empty_settings_render_without_errors(self):
         response = self.client.get("/")
         self.assertEqual(response.status_code, 200)
         self.assertNotIn("mailto:", response.content.decode())
+
+
+class SocialLinkTests(TestCase):
+    def test_link_without_platform_needs_label(self):
+        from django.core.exceptions import ValidationError
+
+        with self.assertRaises(ValidationError):
+            SocialLink(url="https://example.com").clean()
+        SocialLink(url="https://example.com", label="Blog").clean()
+        SocialLink(url="https://example.com", platform="tiktok").clean()
+
+    def test_name_and_icon(self):
+        link = SocialLink(platform="tiktok", url="https://tiktok.com/@example")
+        self.assertEqual(link.name, "TikTok")
+        self.assertTrue(link.icon_path)
+        self.assertEqual(SocialLink(label="Blog", url="https://example.com").icon_path, "")

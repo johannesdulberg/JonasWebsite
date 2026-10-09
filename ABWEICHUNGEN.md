@@ -11,13 +11,9 @@ Status: **offen** = noch nicht besprochen, **bestätigt** = bleibt so,
 
 ### 1. Social-Media-Links als Text statt als Icons
 
-- **Bei Wix:** kleine Icons für Instagram und TikTok.
-- **Jetzt:** die Namen als Textlinks ("Instagram", "TikTok").
-- **Warum:** Im Admin lässt sich so jede Plattform eintragen, ohne dass für
-  jede ein Icon im Code hinterlegt sein muss. Text ist außerdem für
-  Screenreader eindeutig und passt zur reduzierten Typografie.
-- **Rückbau:** klein. Icons als SVG hinterlegen und pro Link auswählbar machen.
-- **Status:** wird zurückgenommen (Entscheidung vom 08.10.2026: Icons), Umsetzung steht in TODO.md
+- **Status:** zurückgenommen am 09.10.2026. Die Fußzeile zeigt wieder Icons wie
+  bei Wix. Im Admin wählt man pro Link eine Plattform; ein Link ohne Plattform
+  erscheint als Text (z. B. LinkedIn, wofür die Icon-Sammlung kein Icon hat).
 
 ### 2. Jahr im Copyright aktualisiert sich selbst
 
@@ -53,8 +49,3 @@ Status: **offen** = noch nicht besprochen, **bestätigt** = bleibt so,
 - **Rückbau:** klein, wenn eine Lizenz für die Originalschriften gekauft wird:
   Dateien austauschen, zwei Zeilen in `config/static_src/tailwind.css`.
 - **Status:** offen
-
-## Offene Punkte (noch keine Abweichung)
-
-- **Fußzeile:** Inhalt stimmt, die Anordnung ist geraten, weil mir davon noch
-  kein Screenshot vorliegt.
