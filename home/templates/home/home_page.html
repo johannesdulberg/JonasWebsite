@@ -5,16 +5,15 @@
 {% block content %}
 <h1 class="sr-only">{{ page.title }}</h1>
 
-{% with top=page.top_gallery_images.all bottom=page.bottom_gallery_images.all %}
 {% if top or bottom %}
 {# Auf dem Handy reichen die Galerien bis an den Rand, ab 980 px sind sie mittig begrenzt wie bei Wix. #}
 <div class="mx-auto max-w-[980px]">
     {% if top %}
-    {% include "home/includes/gallery_strip.html" with items=top size="large" label="Galerie 1" %}
+    {% include "includes/gallery_strip.html" with items=top size="large" label="Galerie 1" %}
     {% endif %}
     {% if bottom %}
     <div class="mt-[clamp(14px,3.3vw,32px)]">
-        {% include "home/includes/gallery_strip.html" with items=bottom size="small" label="Galerie 2" %}
+        {% include "includes/gallery_strip.html" with items=bottom size="small" label="Galerie 2" %}
     </div>
     {% endif %}
 </div>
@@ -23,5 +22,4 @@
     <p class="text-sm text-muted">Diese Seite hat noch keinen Inhalt.</p>
 </div>
 {% endif %}
-{% endwith %}
 {% endblock content %}

@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% load wagtailcore_tags wagtailimages_tags %}
+
+{% block content %}
+<article class="mx-auto grid max-w-[980px] gap-10 px-6 pt-6 sm:px-8 md:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] md:gap-14 md:pt-10 lg:px-0">
+    <h1 class="sr-only">{{ page.title }}</h1>
+    {% if page.image %}
+    <div class="mx-auto w-full max-w-[320px]">
+        {% srcset_image page.image fill-{320x320,640x640} format-webp sizes="320px" alt=page.image.description class="block h-auto w-full" %}
+    </div>
+    {% endif %}
+    <div class="rich-text {% if not page.image %}md:col-span-2{% endif %}">{{ page.body|richtext }}</div>
+</article>
+{% endblock content %}

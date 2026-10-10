@@ -1,0 +1,21 @@
+{% load core_tags %}
+{% comment %}
+Raster aus ganzen, unbeschnittenen Bildern in gleich hohen Zeilen.
+
+  items: Einträge mit .image
+
+So funktioniert es ohne JavaScript: Jedes Bild bekommt sein Seitenverhältnis
+als Variable --ar. Die Wunschbreite ist Zeilenhöhe mal Seitenverhältnis, und
+der Platz, der in einer Zeile übrig bleibt, wird im selben Verhältnis verteilt.
+Dadurch füllt jede Zeile die Breite, und alle Bilder einer Zeile sind gleich
+hoch. Die Zeilenhöhe (--row) wächst mit dem Bildschirm.
+{% endcomment %}
+<ul data-lightbox-group
+    class="flex flex-wrap gap-1.5 [--row:clamp(170px,17vw,260px)] after:grow-[1000000] after:content-[''] md:gap-2">
+    {% for item in items %}
+    <li style="--ar: {{ item.image|aspect_ratio }}"
+        class="aspect-[var(--ar)] grow-[calc(var(--ar)*100)] basis-[calc(var(--ar)*var(--row))]">
+        {% include "includes/gallery_item.html" with image=item.image layout="grid" %}
+    </li>
+    {% endfor %}
+</ul>

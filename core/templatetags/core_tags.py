@@ -26,3 +26,11 @@ def main_nav(context):
         # Aktiv ist ein Menüpunkt auch dann, wenn man auf einer seiner Unterseiten ist.
         items.append({"page": child, "active": current_path.startswith(child.path)})
     return {"items": items, "request": request}
+
+
+@register.filter
+def aspect_ratio(image):
+    """Breite durch Höhe eines Bildes, als Zahl für CSS (Punkt als Dezimaltrenner)."""
+    if not image or not image.height:
+        return "1.5"
+    return f"{image.width / image.height:.4f}"

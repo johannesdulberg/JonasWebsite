@@ -1,26 +1,23 @@
-{% load wagtailimages_tags %}
 {% comment %}
-Eine waagerecht scrollende Bildreihe.
+Eine waagerecht scrollende Bildreihe im Hochformat.
 
-  items: Galerie-Einträge (jeweils mit .image)
+  items: Einträge mit .image
   size:  "large" oder "small"
   label: Name für Screenreader
 
 Breite und Abstand wachsen mit dem Bildschirm zwischen Handy- und Desktop-Maß
 (clamp). Die Pfeile und das Ein-/Ausblenden macht site.js; ohne JavaScript
 lässt sich die Reihe trotzdem wischen und scrollen.
-
-Die Bildgrößen hier müssen zu HomePage.TOP_RENDITIONS / BOTTOM_RENDITIONS passen.
 {% endcomment %}
-<div class="relative" data-strip>
+<div class="relative" data-strip data-lightbox-group>
     <ul data-strip-track tabindex="0" aria-label="{{ label }}"
         class="no-scrollbar flex snap-x overflow-x-auto scroll-smooth {% if size == "large" %}gap-[clamp(15px,4.3vw,42px)]{% else %}gap-[clamp(15px,3.06vw,30px)]{% endif %}">
         {% for item in items %}
         <li class="shrink-0 snap-start {% if size == "large" %}w-[clamp(76px,16.33vw,160px)]{% else %}w-[clamp(57px,10.3vw,101px)]{% endif %}">
             {% if size == "large" %}
-            {% srcset_image item.image fill-{160x456,320x912} format-webp sizes="(min-width: 980px) 160px, 20vw" alt=item.image.description loading="lazy" class="block h-auto w-full" %}
+            {% include "includes/gallery_item.html" with image=item.image layout="strip_large" %}
             {% else %}
-            {% srcset_image item.image fill-{101x289,202x578,303x867} format-webp sizes="(min-width: 980px) 101px, 15vw" alt=item.image.description loading="lazy" class="block h-auto w-full" %}
+            {% include "includes/gallery_item.html" with image=item.image layout="strip_small" %}
             {% endif %}
         </li>
         {% endfor %}

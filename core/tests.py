@@ -106,6 +106,10 @@ class SeedSiteTests(TestCase):
         settings = SiteSettings.for_site(site)
         self.assertEqual(settings.postal_code_city, "59494 Soest")
         self.assertEqual(settings.legal_page.slug, "impressum")
+        self.assertEqual(
+            [page.specific_class.__name__ for page in site.root_page.get_children()],
+            ["GalleryPage", "GalleryPage", "GalleryPage", "BookingPage", "AboutPage", "StandardPage"],
+        )
         self.assertIsNotNone(settings.footer_download)
         self.assertEqual(
             [link.platform for link in settings.social_links.all()], ["instagram", "tiktok"]

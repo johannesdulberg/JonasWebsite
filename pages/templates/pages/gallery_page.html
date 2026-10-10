@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% load wagtailcore_tags %}
+
+{% block content %}
+<h1 class="sr-only">{{ page.title }}</h1>
+
+{% if page.intro %}
+<div class="rich-text mx-auto max-w-3xl px-6 pb-8 text-center sm:px-8">{{ page.intro|richtext }}</div>
+{% endif %}
+
+{% for section in sections %}
+<section class="{% if not forloop.first %}mt-16 md:mt-24{% endif %}">
+    {% if section.heading or section.text %}
+    <div class="mx-auto max-w-3xl px-6 pb-6 text-center sm:px-8 md:pb-8">
+        {% if section.heading %}<h2 class="text-xl uppercase tracking-[0.2em] md:text-2xl">{{ section.heading }}</h2>{% endif %}
+        {% if section.text %}<div class="rich-text mt-4">{{ section.text|richtext }}</div>{% endif %}
+    </div>
+    {% endif %}
+
+    {% with videos=section.videos.all images=section.images.all %}
+    {% if videos %}
+    {# Cinemagramme: kurze Videos ohne Ton in Schleife. Sie starten erst, wenn sie sichtbar werden (site.js). #}
+    <ul class="mx-auto grid max-w-[980px] grid-cols-2 gap-2 px-3 sm:grid-cols-3 md:gap-3 lg:px-0 {% if images %}mb-8{% endif %}">
+        {% for item in videos %}
+        <li>
+            <video class="block w-full" src="{{ item.video.file.url }}" muted loop playsinline preload="metadata" data-autoplay-visible
+                   aria-label="{{ item.video.title }}"></video>
+        </li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+
+    {% if images %}
+    {% if section.layout == "strip_large" %}
+    <div class="mx-auto max-w-[980px]">{% include "includes/gallery_strip.html" with items=images size="large" label=section.heading|default:page.title %}</div>
+    {% elif section.layout == "strip_small" %}
+    <div class="mx-auto max-w-[980px]">{% include "includes/gallery_strip.html" with items=images size="small" label=section.heading|default:page.title %}</div>
+    {% else %}
+    <div class="px-1.5 md:px-[5vw]">{% include "includes/gallery_grid.html" with items=images %}</div>
+    {% endif %}
+    {% endif %}
+    {% endwith %}
+</section>
+{% empty %}
+<div class="mx-auto max-w-screen-2xl px-6 py-24 sm:px-8 md:px-10">
+    <p class="text-sm text-muted">Diese Seite hat noch keinen Inhalt.</p>
+</div>
+{% endfor %}
+{% endblock content %}

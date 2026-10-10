@@ -1,23 +1,29 @@
-"""Lädt alle Fotos der bisherigen Wix-Seite in Originalgröße herunter.
+"""Lädt Fotos, Videos und Texte der bisherigen Wix-Seite herunter.
 
 Aufruf (Container muss laufen):
 
     docker compose exec web python scripts/fetch_wix_images.py
 
 Ergebnis: Ordner wix_import/ mit einem Unterordner pro Seite und einer
-manifest.json, die Reihenfolge, Alt-Texte und Herkunft festhält. Der Ordner
-steht in .gitignore, die Fotos landen also nicht im Repo.
+manifest.json. Die hält pro Seite fest:
+
+  items    alle Bilder und Videos mit Datei und Reihenfolge
+  content  den Inhalt in der Reihenfolge des Seitenquelltexts: Überschriften,
+           Absätze, Bilder (mit Kachelgröße und Fokuspunkt), Formularfelder
+
+Der Ordner steht in .gitignore, die Fotos landen also nicht im Repo.
 
 Das Skript kann beliebig oft laufen. Vorhandene Dateien lädt es nicht erneut,
-und Seiten, die schon vollständig in der manifest.json stehen, fragt es nicht
-noch einmal ab. Mit --neu liest es alle Seiten frisch von Wix, zum Beispiel
-wenn dort Bilder dazugekommen sind.
+und den Quelltext jeder Seite legt es als page.html ab, damit es Wix dafür
+nur einmal fragen muss. Mit --neu liest es alle Seiten frisch von Wix, zum
+Beispiel wenn dort etwas geändert wurde.
 
 Hintergrund: Wix liefert Bilder verkleinert aus, über Adressen wie
     https://static.wixstatic.com/media/<id>~mv2.jpg/v1/fill/w_160,h_456,.../<name>.jpg
 Ohne den Teil ab /v1/ kommt die Datei so, wie sie hochgeladen wurde.
 """
 
+import html as html_module
 import json
 import re
 import sys
@@ -36,6 +42,7 @@ PAGES = {
     "other": "/other",
     "booking": "/booking",
     "about": "/about",
+    "impressum": "/impressum",
 }
 # Alle eigenen Uploads beginnen mit dieser Kennung des Wix-Kontos.
 # Das schließt fremde Dateien wie die Social-Media-Icons aus.
@@ -102,6 +109,115 @@ class ImgCollector(HTMLParser):
             self.images.append((match.group(1), (attrs.get("alt") or "").strip()))
 
 
+TILE_RE = re.compile(r"/v1/[a-z]+/w_(\d+),h_(\d+)(?:[^/]*?fp_([\d.]+)_([\d.]+))?")
+TEXT_TAGS = {"h1", "h2", "h3", "h4", "h5", "h6", "p", "li", "label", "button"}
+IGNORED_TAGS = {"script", "style", "noscript", "svg", "header", "footer", "nav"}
+FIELD_TAGS = {"input", "textarea", "select"}
+
+
+class ContentCollector(HTMLParser):
+    """Liest den Inhalt einer Seite in der Reihenfolge des Quelltexts.
+
+    Ergebnis ist eine Liste aus Einträgen:
+      {"type": "text", "tag": "h2" | "p" | ..., "text": "...", "html": "..."}
+      {"type": "image", "id": "...", "alt": "...", "width": 160, "height": 456, "focal_point": [0.5, 0.3]}
+      {"type": "field", "kind": "input" | "textarea", "name": "...", "label": "..."}
+
+    Berücksichtigt wird nur, was in <main> steht (ohne Kopf- und Fußzeile). In
+    "html" bleiben Links und Zeilenumbrüche erhalten, alles andere ist Text.
+    """
+
+    def __init__(self, only_main):
+        super().__init__(convert_charrefs=True)
+        self.only_main = only_main
+        self.main_depth = 0
+        self.ignored = []  # Stapel der gerade offenen Tags, deren Inhalt nicht zählt
+        self.block = None  # Tag des Textblocks, der gerade gesammelt wird
+        self.text = []
+        self.markup = []
+        self.items = []
+
+    def active(self):
+        return not self.ignored and (self.main_depth > 0 or not self.only_main)
+
+    def handle_starttag(self, tag, attrs):
+        attrs = dict(attrs)
+        if tag == "main":
+            self.main_depth += 1
+        if tag in IGNORED_TAGS:
+            self.ignored.append(tag)
+            return
+        if not self.active():
+            return
+
+        if tag == "img":
+            source = " ".join(filter(None, [attrs.get("src"), attrs.get("data-src"), attrs.get("srcset")]))
+            match = IMAGE_RE.search(source)
+            if match:
+                entry = {"type": "image", "id": match.group(1), "alt": (attrs.get("alt") or "").strip()}
+                tile = TILE_RE.search(source)
+                if tile:
+                    entry["width"], entry["height"] = int(tile.group(1)), int(tile.group(2))
+                    if tile.group(3):
+                        entry["focal_point"] = [float(tile.group(3)), float(tile.group(4))]
+                self.items.append(entry)
+        elif tag == "video":
+            self.items.append({"type": "video", "src": attrs.get("src") or "", "poster": attrs.get("poster") or ""})
+        elif tag in FIELD_TAGS and attrs.get("type") not in {"hidden", "submit"}:
+            self.items.append(
+                {
+                    "type": "field",
+                    "kind": tag,
+                    "input_type": attrs.get("type") or "",
+                    "name": attrs.get("name") or "",
+                    "label": attrs.get("aria-label") or attrs.get("placeholder") or "",
+                    "required": "required" in attrs,
+                }
+            )
+        elif tag in TEXT_TAGS:
+            # Ein Absatz in einem Listenpunkt (<li><p>) zählt als der Listenpunkt selbst.
+            if self.block is None:
+                self.block, self.text, self.markup = tag, [], []
+        elif self.block:
+            if tag == "br":
+                self.text.append("\n")
+                self.markup.append("<br/>")
+            elif tag == "a" and attrs.get("href"):
+                self.markup.append(f'<a href="{html_module.escape(attrs["href"], quote=True)}">')
+
+    def handle_endtag(self, tag):
+        if tag == "main":
+            self.main_depth = max(0, self.main_depth - 1)
+        if self.ignored and tag == self.ignored[-1]:
+            self.ignored.pop()
+            return
+        if not self.block:
+            return
+        if tag == "a":
+            self.markup.append("</a>")
+        elif tag == self.block:
+            # Wix füllt leere Zeilen mit unsichtbaren Zeichen, die fliegen raus.
+            invisible = dict.fromkeys(map(ord, "\u200b\u200c\u200d\ufeff\xa0"), " ")
+            text = " ".join("".join(self.text).translate(invisible).split())
+            if text:
+                markup = re.sub(r"[ \t\r\n]+", " ", "".join(self.markup).translate(invisible)).strip()
+                self.items.append({"type": "text", "tag": tag, "text": text, "html": markup})
+            self.block = None
+
+    def handle_data(self, data):
+        if self.block and self.active():
+            self.text.append(data)
+            self.markup.append(html_module.escape(data, quote=False))
+
+
+def find_content(html):
+    """Inhalt einer Seite in Quelltext-Reihenfolge, siehe ContentCollector."""
+    collector = ContentCollector(only_main="<main" in html)
+    collector.feed(html)
+    collector.close()
+    return collector.items
+
+
 def find_media(html):
     """Gibt (Bilder, Videos) einer Seite zurück, jeweils ohne Doppelte."""
     collector = ImgCollector()
@@ -156,25 +272,40 @@ def main():
 
     for name, path in PAGES.items():
         previous = known.get(name)
-        if previous and all((OUT_DIR / item["file"]).exists() for item in previous["items"]):
+        # "content" kam später dazu: Fehlt es, wird die Seite noch einmal ausgewertet.
+        if (
+            previous
+            and "content" in previous
+            and all((OUT_DIR / item["file"]).exists() for item in previous["items"])
+        ):
             manifest["pages"][name] = previous
             print(f"\n== {name}: bereits vollständig, übersprungen", flush=True)
             continue
 
-        if requested:
-            time.sleep(PAUSE_BETWEEN_PAGES)
-        requested = True
-        print(f"\n== {name} ({SITE}{path})", flush=True)
-        try:
-            html = fetch(SITE + path).decode("utf-8", errors="replace")
-        except Exception as error:
-            print(f"   Seite nicht abrufbar: {error}")
-            errors += 1
-            continue
-
-        images, videos = find_media(html)
         page_dir = OUT_DIR / name
         page_dir.mkdir(exist_ok=True)
+        html_file = page_dir / "page.html"
+
+        if html_file.exists() and not force:
+            print(f"\n== {name} (aus gespeichertem Quelltext)", flush=True)
+            html = html_file.read_text(encoding="utf-8")
+        else:
+            if requested:
+                time.sleep(PAUSE_BETWEEN_PAGES)
+            requested = True
+            print(f"\n== {name} ({SITE}{path})", flush=True)
+            try:
+                html = fetch(SITE + path).decode("utf-8", errors="replace")
+            except Exception as error:
+                print(f"   Seite nicht abrufbar: {error}")
+                errors += 1
+                # Was aus einem früheren Lauf bekannt ist, bleibt im Manifest stehen.
+                if previous:
+                    manifest["pages"][name] = previous
+                continue
+            html_file.write_text(html, encoding="utf-8")
+
+        images, videos = find_media(html)
         entries = []
 
         for position, image in enumerate(images, start=1):
@@ -205,15 +336,21 @@ def main():
             print(f"   {filename}  {status}")
             entries.append({"position": position, "file": f"{name}/{filename}", "type": "video", "url": url})
 
-        manifest["pages"][name] = {"path": path, "items": entries}
-        print(f"   -> {len(images)} Bilder, {len(videos)} Videos")
+        content = find_content(html)
+        texts = sum(item["type"] == "text" for item in content)
+        manifest["pages"][name] = {"path": path, "items": entries, "content": content}
+        print(f"   -> {len(images)} Bilder, {len(videos)} Videos, {texts} Textblöcke")
 
     manifest_file.write_text(json.dumps(manifest, indent=2, ensure_ascii=False) + "\n")
 
     print("\nZusammenfassung")
     for name, page in manifest["pages"].items():
         kinds = [item["type"] for item in page["items"]]
-        print(f"   {name:<12}{kinds.count('image'):>4} Bilder{kinds.count('video'):>4} Videos")
+        texts = sum(item["type"] == "text" for item in page.get("content", []))
+        print(
+            f"   {name:<12}{kinds.count('image'):>4} Bilder{kinds.count('video'):>4} Videos"
+            f"{texts:>5} Textblöcke"
+        )
     print(f"   Fehler: {errors}")
     print(f"   Ablage: {OUT_DIR}")
     return 1 if errors else 0

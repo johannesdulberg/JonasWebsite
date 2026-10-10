@@ -50,3 +50,41 @@ Status: **offen** = noch nicht besprochen, **bestätigt** = bleibt so,
 - **Rückbau:** klein, wenn eine Lizenz für die Originalschriften gekauft wird:
   Dateien austauschen, zwei Zeilen in `config/static_src/tailwind.css`.
 - **Status:** offen
+
+## Galerien
+
+### 5. Raster: gleich hohe Zeilen statt der Wix-Collage
+
+- **Bei Wix:** eine Collage, in der Bilder in unterschiedlich großen Gruppen
+  ineinandergeschachtelt sind (Commercial, Outdoor).
+- **Jetzt:** Zeilen aus ganzen, unbeschnittenen Bildern. Alle Bilder einer
+  Zeile sind gleich hoch, jede Zeile füllt die Breite, die Reihenfolge läuft
+  von links nach rechts.
+- **Warum:** Die Collage berechnet Wix für jede Bildschirmbreite mit eigenem
+  Programmcode neu. Das Zeilenraster kommt ohne JavaScript aus, zeigt jedes
+  Bild vollständig, hält die Reihenfolge lesbar und passt sich jeder Breite an.
+- **Rückbau:** groß (eigener Layout-Algorithmus).
+- **Status:** offen
+
+### 6. Großansicht ohne Dateinamen als Bildunterschrift
+
+- **Bei Wix:** Unter dem großen Bild steht der Dateiname, z. B. "DSC01890.jpg".
+- **Jetzt:** Dort steht die Beschreibung des Bildes aus dem Admin. Sie ist bei
+  allen importierten Bildern leer, es erscheint also nichts.
+- **Warum:** Der Dateiname ist vermutlich ungewollt stehen geblieben. So kann
+  pro Bild eine echte Unterschrift gepflegt werden.
+- **Rückbau:** klein (Dateinamen beim Import als Beschreibung eintragen).
+- **Status:** offen
+
+## Offene Punkte (noch keine Abweichung)
+
+Hier habe ich ohne Vorlage gebaut, weil mir von diesen Seiten kein Bild
+vorliegt. Das wird angepasst, sobald Screenshots da sind.
+
+- **Other:** Aufteilung in Abschnitte und Zuordnung der Bilder folgt dem
+  Quelltext der Wix-Seite, nicht dem sichtbaren Aufbau.
+- **Booking:** Anordnung von Text, Bildreihe, Kontakt und Formular. Die
+  Formularfelder (Name, E-Mail, Nachricht) sind angenommen.
+- **About:** Bild links, Text rechts.
+- **Outdoor:** als Raster wie Commercial.
+

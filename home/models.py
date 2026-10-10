@@ -4,18 +4,11 @@ from wagtail.admin.panels import FieldPanel, MultipleChooserPanel
 from wagtail.images import get_image_model_string
 from wagtail.models import Orderable, Page
 
+from core import images as image_specs
+
 
 class HomePage(Page):
     """Startseite mit zwei waagerecht scrollenden Galerien aus hochkant beschnittenen Bildern."""
-
-    # Bildgrößen, die das Template anfordert (home/includes/gallery_strip.html).
-    # Hier noch einmal aufgeführt, damit der Import sie vorab erzeugen kann.
-    TOP_RENDITIONS = ["fill-160x456|format-webp", "fill-320x912|format-webp"]
-    BOTTOM_RENDITIONS = [
-        "fill-101x289|format-webp",
-        "fill-202x578|format-webp",
-        "fill-303x867|format-webp",
-    ]
 
     content_panels = Page.content_panels + [
         MultipleChooserPanel(
@@ -32,16 +25,29 @@ class HomePage(Page):
         ),
     ]
 
+    # Es gibt genau eine Startseite, direkt unter der Wurzel des Seitenbaums.
+    parent_page_types = ["wagtailcore.Page"]
+
     class Meta:
         verbose_name = "Startseite"
         verbose_name_plural = "Startseiten"
 
+    def get_context(self, request, *args, **kwargs):
+        context = super().get_context(request, *args, **kwargs)
+        context["top"] = image_specs.with_renditions(self.top_gallery_images.all())
+        context["bottom"] = image_specs.with_renditions(self.bottom_gallery_images.all())
+        return context
+
     def warm_renditions(self):
         """Erzeugt alle Bildgrößen der Galerien, damit der erste Seitenaufruf nicht darauf wartet."""
-        for item in self.top_gallery_images.select_related("image"):
-            item.image.get_renditions(*self.TOP_RENDITIONS)
-        for item in self.bottom_gallery_images.select_related("image"):
-            item.image.get_renditions(*self.BOTTOM_RENDITIONS)
+        image_specs.warm(
+            [item.image for item in self.top_gallery_images.select_related("image")],
+            image_specs.STRIP_LARGE,
+        )
+        image_specs.warm(
+            [item.image for item in self.bottom_gallery_images.select_related("image")],
+            image_specs.STRIP_SMALL,
+        )
 
 
 class GalleryImage(Orderable):

@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% load wagtailcore_tags %}
+
+{% block content %}
+{% with site_settings=settings.core.SiteSettings %}
+<h1 class="sr-only">{{ page.title }}</h1>
+
+{% if page.intro %}
+<div class="rich-text mx-auto max-w-3xl px-6 pb-10 pt-6 text-center sm:px-8 md:pt-10">{{ page.intro|richtext }}</div>
+{% endif %}
+
+{% if strip_images %}
+<div class="mx-auto max-w-[980px]">
+    {% include "includes/gallery_strip.html" with items=strip_images size="small" label=page.title %}
+</div>
+{% endif %}
+
+<section class="mx-auto max-w-xl px-6 pt-14 sm:px-8 md:pt-20">
+    <h2 class="text-center text-xl uppercase tracking-[0.2em] md:text-2xl">{{ page.contact_heading }}</h2>
+
+    <p class="mt-5 text-center leading-relaxed">
+        {% if site_settings.email %}<a class="underline underline-offset-4 transition-colors hover:text-accent" href="mailto:{{ site_settings.email }}">{{ site_settings.email }}</a><br>{% endif %}
+        {% if site_settings.phone %}<a class="transition-colors hover:text-accent" href="tel:{{ site_settings.phone|cut:' ' }}">{{ site_settings.phone }}</a>{% endif %}
+    </p>
+
+    {# Das Formular ist noch nicht angeschlossen (siehe TODO.md). site.js fängt das Absenden ab und sagt das auch. #}
+    <form class="mt-10 grid gap-5" data-inactive-form novalidate>
+        <label class="grid gap-1.5 text-sm">
+            Name
+            <input type="text" name="name" autocomplete="name" class="border border-ink bg-paper px-3 py-2.5 text-base outline-offset-2 focus-visible:outline-2 focus-visible:outline-accent">
+        </label>
+        <label class="grid gap-1.5 text-sm">
+            E-Mail
+            <input type="email" name="email" autocomplete="email" class="border border-ink bg-paper px-3 py-2.5 text-base outline-offset-2 focus-visible:outline-2 focus-visible:outline-accent">
+        </label>
+        <label class="grid gap-1.5 text-sm">
+            Nachricht
+            <textarea name="message" rows="6" class="border border-ink bg-paper px-3 py-2.5 text-base outline-offset-2 focus-visible:outline-2 focus-visible:outline-accent"></textarea>
+        </label>
+        <div>
+            <button type="submit" class="border border-ink px-8 py-2.5 text-sm uppercase tracking-[0.2em] transition-colors hover:border-accent hover:bg-accent hover:text-paper">Senden</button>
+        </div>
+        <p data-form-note hidden role="status" class="text-sm text-accent">
+            Das Formular ist noch nicht aktiv. Bitte melden Sie sich per E-Mail oder Telefon.
+        </p>
+    </form>
+</section>
+{% endwith %}
+{% endblock content %}

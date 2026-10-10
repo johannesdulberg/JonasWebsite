@@ -27,6 +27,7 @@ BASE_DIR = PROJECT_DIR.parent
 INSTALLED_APPS = [
     "core",
     "home",
+    "pages",
     "search",
     "wagtail.contrib.forms",
     "wagtail.contrib.settings",
@@ -192,6 +193,7 @@ WAGTAILDOCS_EXTENSIONS = [
     "csv",
     "docx",
     "key",
+    "mp4",
     "odt",
     "pdf",
     "pptx",
@@ -208,4 +210,9 @@ WAGTAILIMAGES_IMAGE_MODEL = "core.CustomImage"
 WAGTAILIMAGES_MAX_UPLOAD_SIZE = 50 * 1024 * 1024  # 50MB
 
 # Maximum upload size for documents in bytes.
-WAGTAILDOCS_MAX_UPLOAD_SIZE = 10 * 1024 * 1024  # 10MB
+WAGTAILDOCS_MAX_UPLOAD_SIZE = 50 * 1024 * 1024  # 50MB, wegen der Videos
+
+# Dokumente direkt über ihre Datei-Adresse ausliefern (in Produktion durch nginx).
+# Nötig für Videos: Browser fordern sie in Teilstücken an, was nginx kann, die
+# Auslieferung durch Django aber nicht.
+WAGTAILDOCS_SERVE_METHOD = "direct"

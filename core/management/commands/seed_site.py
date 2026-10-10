@@ -14,17 +14,6 @@ from wagtail.documents import get_document_model
 from wagtail.models import Page, Site
 
 from core.models import SiteSettings, SocialLink
-from home.models import HomePage
-
-# (Titel, Slug, im Menü anzeigen). Reihenfolge = Reihenfolge im Menü.
-PAGES = [
-    ("Commercial", "commercial", True),
-    ("Outdoor", "outdoor", True),
-    ("Other", "other", True),
-    ("Booking", "booking", True),
-    ("About", "about", True),
-    ("Impressum", "impressum", False),
-]
 
 # Angaben aus Fußzeile und Impressum der bisherigen Seite.
 SETTINGS = {
@@ -60,16 +49,11 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         site = Site.objects.get(is_default_site=True)
-        home = site.root_page
 
-        for title, slug, in_menu in PAGES:
-            if home.get_children().filter(slug=slug).exists():
-                self.stdout.write(f"Seite vorhanden: {title}")
-                continue
-            # Vorerst der einzige vorhandene Seitentyp. Sobald es eigene Typen für
-            # Galerie, Booking und About gibt, werden diese Platzhalter ersetzt.
-            home.add_child(instance=HomePage(title=title, slug=slug, show_in_menus=in_menu))
-            self.stdout.write(self.style.SUCCESS(f"Seite angelegt: {title}"))
+        # Erst hier importieren: pages hängt von core ab, nicht umgekehrt.
+        from pages.setup import ensure_pages
+
+        pages = ensure_pages(site, log=self.stdout.write)
 
         settings = SiteSettings.for_site(site)
 
@@ -77,8 +61,8 @@ class Command(BaseCommand):
             if not getattr(settings, field):
                 setattr(settings, field, value)
 
-        if settings.legal_page is None:
-            settings.legal_page = Page.objects.get(pk=home.get_children().get(slug="impressum").pk)
+        if settings.legal_page is None and "impressum" in pages:
+            settings.legal_page = Page.objects.get(pk=pages["impressum"].pk)
 
         settings.save()
 

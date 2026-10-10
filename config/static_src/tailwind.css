@@ -58,3 +58,50 @@
     display: none;
   }
 }
+
+/*
+  Texte aus dem Editor im Admin (Einleitungen, About, Impressum). Der Editor
+  liefert nacktes HTML ohne Klassen, deshalb stehen die Abstände hier.
+*/
+@utility rich-text {
+  line-height: 1.7;
+
+  & > * + * {
+    margin-top: 1em;
+  }
+  & h2 {
+    margin-top: 2.2em;
+    font-size: 1.25rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  & h3 {
+    margin-top: 1.8em;
+    font-size: 1.05rem;
+    font-weight: 700;
+  }
+  & > :first-child {
+    margin-top: 0;
+  }
+  & a {
+    text-decoration: underline;
+    text-underline-offset: 4px;
+    transition: color 150ms;
+  }
+  & a:hover {
+    color: var(--color-accent);
+  }
+  & ul,
+  & ol {
+    padding-left: 1.4em;
+  }
+  & ul {
+    list-style: disc;
+  }
+  & ol {
+    list-style: decimal;
+  }
+  & li + li {
+    margin-top: 0.4em;
+  }
+}
