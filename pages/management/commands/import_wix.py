@@ -22,6 +22,7 @@ from pathlib import Path
 
 from django.conf import settings
 from django.core.files.images import ImageFile
+from core.checks import require_current_database
 from django.core.management.base import BaseCommand, CommandError
 from wagtail.images import get_image_model
 from wagtail.models import Collection, Site
@@ -155,6 +156,7 @@ class Command(BaseCommand):
     # ------------------------------------------------------------------ Ablauf
 
     def handle(self, *args, **options):
+        require_current_database()
         self.source = Path(options["quelle"])
         if not self.source.is_dir():
             raise CommandError(

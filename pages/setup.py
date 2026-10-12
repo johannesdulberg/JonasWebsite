@@ -3,6 +3,9 @@
 Wird von seed_site (Grundgerüst) und import_wix (Inhalte) benutzt.
 """
 
+from django.contrib.contenttypes.models import ContentType
+from django.core.exceptions import ObjectDoesNotExist
+from django.db import transaction
 from wagtail.models import Page
 
 from core.models import SiteSettings
@@ -21,6 +24,7 @@ PAGES = [
 ]
 
 
+@transaction.atomic
 def ensure_pages(site, log=lambda message: None):
     """Sorgt dafür, dass alle Seiten mit dem richtigen Typ existieren.
 
@@ -34,7 +38,19 @@ def ensure_pages(site, log=lambda message: None):
     for title, slug, in_menu, model in PAGES:
         existing = home.get_children().filter(slug=slug).first()
         if existing is not None:
-            specific = existing.specific
+            try:
+                specific = existing.specific
+            except ObjectDoesNotExist:
+                # Halb angelegte Seite aus einem abgebrochenen Lauf: neu anlegen.
+                title, in_menu = existing.title, existing.show_in_menus
+                # Erst zum einfachen Seitentyp machen, sonst sucht Wagtail beim
+                # Löschen nach den fehlenden Daten des eigentlichen Typs.
+                Page.objects.filter(pk=existing.pk).update(content_type=ContentType.objects.get_for_model(Page))
+                Page.objects.get(pk=existing.pk).delete()
+                log(f"Unvollständige Seite repariert: {title}")
+                home = Page.objects.get(pk=home.pk)
+                result[slug] = home.add_child(instance=model(title=title, slug=slug, show_in_menus=in_menu))
+                continue
             if isinstance(specific, model):
                 result[slug] = specific
                 continue

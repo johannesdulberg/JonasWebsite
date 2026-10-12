@@ -9,6 +9,7 @@ keine Felder, die im Admin schon ausgefüllt wurden.
 import urllib.request
 
 from django.core.files.base import ContentFile
+from core.checks import require_current_database
 from django.core.management.base import BaseCommand
 from wagtail.documents import get_document_model
 from wagtail.models import Page, Site
@@ -48,6 +49,7 @@ class Command(BaseCommand):
     help = "Legt Seiten, Kopf- und Fußzeile nach Vorbild der bisherigen Wix-Seite an."
 
     def handle(self, *args, **options):
+        require_current_database()
         site = Site.objects.get(is_default_site=True)
 
         # Erst hier importieren: pages hängt von core ab, nicht umgekehrt.

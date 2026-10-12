@@ -73,6 +73,7 @@ Vorher `docker compose down`, weil beide Varianten dieselben Containernamen benu
 | Stoppen | `docker compose down` |
 | Logs ansehen | `docker compose logs -f web` |
 | Migrationen erzeugen | `docker compose exec web python manage.py makemigrations` |
+| Migrationen anwenden (nach `git pull`) | `docker compose exec web python manage.py migrate` |
 | Django-Shell | `docker compose exec web python manage.py shell` |
 | Alles löschen, auch Datenbank und Fotos | `docker compose down -v` |
 

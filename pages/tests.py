@@ -272,6 +272,31 @@ class ImportWixTests(ImportTestCase):
             ["foto", "video", "social", "booking", "about"],
         )
 
+    def test_half_created_page_is_repaired(self):
+        # Abgebrochener Lauf: Eintrag im Seitenbaum mit Typ Foto-Bibliothek, aber ohne deren Daten.
+        from django.contrib.contenttypes.models import ContentType
+
+        broken = self.site.root_page.add_child(instance=StandardPage(title="Foto", slug="foto", show_in_menus=True))
+        from django.db import connection
+
+        with connection.cursor() as cursor:
+            cursor.execute("DELETE FROM pages_standardpage WHERE page_ptr_id = %s", [broken.pk])
+        Page.objects.filter(pk=broken.pk).update(content_type=ContentType.objects.get_for_model(PhotoLibraryPage))
+
+        output = self.run_import("--seite", "foto")
+        self.assertIn("Unvollständige Seite repariert: Foto", output)
+        self.assertEqual(self.library().photos.count(), 10)
+        self.assertEqual(self.client.get("/foto/").status_code, 200)
+
+    def test_pending_migrations_stop_the_import(self):
+        from unittest import mock
+
+        from django.core.management.base import CommandError
+
+        with mock.patch("django.db.migrations.executor.MigrationExecutor.migration_plan", return_value=[(mock.Mock(app_label="pages", name="0003_photo_library"), False)]):
+            with self.assertRaisesMessage(CommandError, "manage.py migrate"):
+                self.run_import()
+
     def test_images_only_in_gallery_data_are_added(self):
         manifest = json.loads((self.source.folder / "manifest.json").read_text())
         extra_id = fake_id(99999)
