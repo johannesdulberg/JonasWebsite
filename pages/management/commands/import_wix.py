@@ -89,6 +89,25 @@ HOME_BOTTOM = [
     ("2614d4fb38d54615baaca35a14e7e193", (0.4, 0.46)),
 ]
 
+# Text der About-Seite, wörtlich von der Wix-Seite übernommen. Wird verwendet,
+# wenn das Auslesen aus dem Quelltext keinen Text liefert.
+ABOUT_TEXT = (
+    "<p>Ursprünglich als Hobby gedacht, ist die Fotografie gegen Ende meines Mechatronik Studiums "
+    "für mich mehr und mehr zu einem Beruf geworden. Über die Jahre hat sich dabei gezeigt, dass "
+    "gerade die Outdoor- und Werbefotografie durch die immer variierenden Bedingungen und "
+    "Herangehensweisen für mich den spannensten Teil der Fotografie ausmachen.</p>"
+    "<p>Es ist die Kombination aus unvorhersehbaren Veränderungen, Unzugänglichkeiten sowie die "
+    "Menge an Einflussfaktoren, welchen man bei der Outdoorfotografie mit akribischer Planung, "
+    "sorgfältiger Recherche und gesundem Pragmatismus entgegen tritt. Während man in der "
+    "Werbefotografie stattdessen mit technischem Know-How und Kreativität versucht das maximal "
+    "Mögliche zu erschaffen. Und es ist genau dann, wenn sich diese zwei Disziplinen überschneiden "
+    "der Moment, wenn ich mich bei meiner Arbeit am wohlsten fühle.</p>"
+    "<p>Über eine Mischung aus privaten und beruflichen Projekten berichte ich mehr oder weniger "
+    "regelmäßig auf meinen Social Media Kanälen "
+    '(<a href="https://www.instagram.com/north.johnny/">Instagram</a> &amp; '
+    '<a href="https://www.tiktok.com/@north.johnny">TikTok</a>).</p>'
+)
+
 IMAGE_SUFFIXES = {".jpg", ".jpeg", ".png", ".webp", ".gif"}
 HEADING_TAGS = {"h1", "h2", "h3", "h4", "h5", "h6"}
 
@@ -464,13 +483,12 @@ class Command(BaseCommand):
     def import_about(self, page):
         if self.skip(page, "about", page is not None and (page.body or page.image_id)):
             return
-        content = self.content("about")
-        if not self.texts_missing("about"):
-            page.body = "".join(
-                f"<p>{item['html']}</p>"
-                for item in content
-                if item["type"] == "text" and item["tag"] in HEADING_TAGS | {"p"}
-            )
+        content = self.content("about") or []
+        page.body = "".join(
+            f"<p>{item['html']}</p>"
+            for item in content
+            if item["type"] == "text" and item["tag"] in HEADING_TAGS | {"p"}
+        ) or ABOUT_TEXT
         images = self.images("about", self.image_entries("about")[:1], page.title, self.collection(page.title))
         page.image = images[0] if images else None
         self.stdout.write(

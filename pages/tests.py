@@ -254,8 +254,8 @@ class ImportWixTests(ImportTestCase):
         (self.source.folder / "manifest.json").unlink()
         output = self.run_import("--seite", "commercial", "--seite", "about")
         self.assertEqual(GalleryPage.objects.get(slug="commercial").sections.get().images.count(), 3)
-        self.assertIn("Keine Texte im Manifest", output)
-        self.assertEqual(AboutPage.objects.get(slug="about").body, "")
+        # Ohne ausgelesenen Text kommt der hinterlegte Wortlaut der Wix-Seite.
+        self.assertIn("Mechatronik Studiums", AboutPage.objects.get(slug="about").body)
 
 
 class AdminTests(ImportTestCase):
