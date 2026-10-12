@@ -211,11 +211,26 @@ class Command(BaseCommand):
             cleaned.append(item)
         return cleaned
 
+    def extra_entries(self, key, known_ids):
+        """Bilder, die nur in den Galerie-Daten der Wix-Seite stehen, nicht als <img>.
+
+        Wix lädt Galeriebilder beim Scrollen nach. Im Quelltext stehen sie dann
+        nur in den eingebetteten Daten, nicht in der Inhaltsliste.
+        """
+        extras = []
+        for item in self.manifest.get(key, {}).get("items", []):
+            wid = wix_id(item.get("url", ""))
+            if item["type"] == "image" and wid and wid not in known_ids:
+                known_ids.add(wid)
+                extras.append({"id": item["url"]})
+        return extras
+
     def image_entries(self, key):
         """Bilder einer Seite in ihrer Reihenfolge, jedes nur einmal."""
         content = self.content(key)
         if content is not None:
             entries = [item for item in content if item["type"] == "image"]
+            entries += self.extra_entries(key, {wix_id(e["id"]) for e in entries})
         else:
             # Älteres Manifest ohne Inhaltsliste, oder gar keins: Reihenfolge der Dateien.
             entries = [
@@ -365,6 +380,13 @@ class Command(BaseCommand):
                 elif item["type"] == "image" and wix_id(item["id"]) not in seen:
                     seen.add(wix_id(item["id"]))
                     current()["entries"].append(item)
+
+            # Nachgeladene Galeriebilder hängen am letzten Abschnitt mit Bildern.
+            extras = self.extra_entries(key, seen)
+            if extras:
+                target = next((d for d in reversed(drafts) if d["entries"]), None) or current()
+                target["entries"].extend(extras)
+                self.stdout.write(f"   {len(extras)} nachgeladene Galeriebilder ergänzt")
 
         # Videos stehen nicht in der Inhaltsliste. Sie kommen in den Abschnitt,
         # dessen Überschrift nach Cinemagramm klingt, sonst in den ersten.

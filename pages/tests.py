@@ -238,6 +238,18 @@ class ImportWixTests(ImportTestCase):
         self.assertEqual(legal.specific_class, StandardPage)
         self.assertIn('href="/impressum/"', self.client.get("/").content.decode())
 
+    def test_images_only_in_gallery_data_are_added(self):
+        manifest = json.loads((self.source.folder / "manifest.json").read_text())
+        extra_id = fake_id(99999)
+        self.source.image_file("outdoor", extra_id)
+        manifest["pages"]["outdoor"]["items"] = [
+            {"type": "image", "url": f"https://static.wixstatic.com/media/{ACCOUNT}_{extra_id}~mv2.jpg", "found_in": "data"}
+        ]
+        (self.source.folder / "manifest.json").write_text(json.dumps(manifest))
+        output = self.run_import("--seite", "outdoor")
+        self.assertIn("1 nachgeladene Galeriebilder", output)
+        self.assertEqual(GalleryPage.objects.get(slug="outdoor").sections.get().images.count(), 3)
+
     def test_without_texts_in_manifest_galleries_still_work(self):
         (self.source.folder / "manifest.json").unlink()
         output = self.run_import("--seite", "commercial", "--seite", "about")
