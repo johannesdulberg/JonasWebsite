@@ -11,6 +11,12 @@
 - [ ] **Cinemagramme wieder zeigen.** Sie lagen auf der alten Seite "Other",
   die mit der Foto-Bibliothek weggefallen ist. Die Videos sind noch unter
   Dokumente. Wo sie hinkommen, ist offen (siehe WUENSCHE.md, Nr. 12).
+- [ ] **Reihenfolge der Fotos in der Bibliothek über Bewertungen.** Jedes Foto
+  bekommt im Admin eine Bewertung (z. B. 1 bis 5 Sterne); die Bibliothek zeigt
+  die besten zuerst. Idee dazu: Die Bewertung bestimmt auch die Größe in der
+  Collage, die besten Fotos landen in den großen Feldern. Bisher gilt die
+  Reihenfolge, in der die Fotos auf der Seite "Foto" stehen (per Ziehen
+  sortierbar).
 - [ ] **Design festlegen.** Menü und Foto-Bibliothek haben vorerst das jetzige
   Aussehen; Entwürfe A–D liegen vor.
 
