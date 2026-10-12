@@ -21,10 +21,9 @@ Seiten, Kopf- und Fußzeile nach Vorbild der bisherigen Seite anlegen (einmalig,
 docker compose exec web python manage.py seed_site
 ```
 
-Fotos, Videos und Texte der bisherigen Seite laden und in die Seiten übernehmen:
+Fotos, Videos und Texte der bisherigen Seite aus dem Ordner `wix_import/` in die Seiten übernehmen (der Ordner liegt nur lokal und ist nicht im Repo):
 
 ```
-docker compose exec web python scripts/fetch_wix_images.py
 docker compose exec web python manage.py import_wix
 ```
 

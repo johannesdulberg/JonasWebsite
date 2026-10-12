@@ -24,7 +24,7 @@ def fake_id(number):
 
 
 class WixSource:
-    """Baut einen wix_import-Ordner nach, wie ihn scripts/fetch_wix_images.py anlegt."""
+    """Baut einen wix_import-Ordner nach, wie er lokal vorliegt."""
 
     def __init__(self, folder):
         self.folder = folder

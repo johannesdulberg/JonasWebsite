@@ -2,7 +2,8 @@
 
     docker compose exec web python manage.py import_wix
 
-Voraussetzung: Der Ordner wix_import/ ist gefüllt (scripts/fetch_wix_images.py).
+Voraussetzung: Der Ordner wix_import/ mit den Fotos der Wix-Seite liegt vor
+(nur lokal, nicht im Repo).
 
 Der Befehl tut dasselbe wie jemand im Admin: Er lädt Fotos in die
 Bildbibliothek, setzt Fokuspunkte und Tags, trägt Texte ein und
@@ -160,7 +161,7 @@ class Command(BaseCommand):
         self.source = Path(options["quelle"])
         if not self.source.is_dir():
             raise CommandError(
-                f"{self.source} fehlt. Zuerst laden: python scripts/fetch_wix_images.py"
+                f"{self.source} fehlt. Der Ordner mit den Wix-Fotos liegt nur lokal."
             )
         self.force = options["neu"]
         wanted = options["seite"] or PAGE_KEYS
@@ -216,7 +217,7 @@ class Command(BaseCommand):
             return True
         if key not in self.manifest and not (self.source / key).is_dir():
             self.stdout.write(
-                self.style.WARNING(f"   wix_import/{key} fehlt. Erst scripts/fetch_wix_images.py ausführen.")
+                self.style.WARNING(f"   wix_import/{key} fehlt.")
             )
             return True
         return False
@@ -288,8 +289,7 @@ class Command(BaseCommand):
         if self.content(key) is None:
             self.stdout.write(
                 self.style.WARNING(
-                    "   Keine Texte im Manifest. scripts/fetch_wix_images.py erneut ausführen, "
-                    f"dann: import_wix --seite {key} --neu"
+                    f"   Keine Texte im Manifest für {key}."
                 )
             )
             return True
@@ -410,7 +410,7 @@ class Command(BaseCommand):
                     seen.add(loaded[round_][0].pk)
                     photos.append(loaded[round_])
         if not photos:
-            self.stdout.write(self.style.WARNING("   Keine Fotos gefunden. Erst scripts/fetch_wix_images.py ausführen."))
+            self.stdout.write(self.style.WARNING("   Keine Fotos gefunden."))
             return
 
         used = {tag for _image, tag in photos}

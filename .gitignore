@@ -19,5 +19,5 @@ __pycache__/
 .idea/
 .vscode/
 
-# Von scripts/fetch_wix_images.py heruntergeladene Fotos
+# Fotos der Wix-Seite (nur lokal)
 /wix_import/
