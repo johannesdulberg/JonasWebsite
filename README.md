@@ -44,7 +44,8 @@ Das CSS kommt von Tailwind. Der Container `tailwind` beobachtet die Templates un
 - **Foto-Bibliothek** (Seite "Foto"): alle Fotos auf einer Seite, oben Filter. Ein Foto erscheint unter einem Filter, wenn es den passenden Tag trägt; Tags setzt man am Bild (Bilder → Bild anklicken → Tags). Welche Tags als Filter erscheinen und in welcher Reihenfolge, steht auf der Seite unter "Filter". Fotos auf die Seite bringen: unter "Fotos" mehrere auf einmal auswählen und per Ziehen sortieren. Am Desktop entsteht daraus eine Collage, auf dem Handy zwei Spalten.
 - **Bildausschnitt:** Die Collage und die Bildreihen beschneiden Fotos. Welcher Teil sichtbar bleibt, bestimmt der Fokuspunkt (Bilder → Bild anklicken → Fokuspunkt aufziehen). In der Großansicht erscheint immer das ganze Bild.
 - **Video und Social:** vorerst einfache Textseiten, bis feststeht, was dort hinkommt.
-- **About, Booking, Impressum:** Texte direkt auf der jeweiligen Seite. E-Mail und Telefon auf der Booking-Seite kommen aus den Einstellungen.
+- **About, Impressum:** Texte direkt auf der jeweiligen Seite.
+- **Booking:** Die Texte stehen vorerst im Template und sind noch nicht im Admin pflegbar (siehe TODO.md). Die E-Mail-Adresse kommt aus den Einstellungen.
 - **Kopf- und Fußzeile:** im Admin unter Einstellungen → Kopf- und Fußzeile (Name, Untertitel, Kontakt, Social Media, Impressum-Link, Download). Bei Social-Media-Links eine Plattform wählen, dann erscheint das Icon; ohne Plattform wird es ein Textlink.
 
 Offene Aufgaben und Vorschläge stehen in [TODO.md](TODO.md). Die Wünsche von Jonas stehen getrennt davon in [WUENSCHE.md](WUENSCHE.md).
