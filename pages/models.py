@@ -1,8 +1,6 @@
 from django.db import models
 from modelcluster.fields import ParentalKey
-from modelcluster.models import ClusterableModel
 from wagtail.admin.panels import FieldPanel, InlinePanel, MultipleChooserPanel
-from wagtail.documents import get_document_model_string
 from wagtail.fields import RichTextField
 from wagtail.images import get_image_model_string
 from wagtail.models import Orderable, Page
@@ -15,87 +13,82 @@ SIMPLE_FEATURES = ["bold", "italic", "link"]
 LONG_FEATURES = ["h2", "h3", "bold", "italic", "link", "ol", "ul"]
 
 
-class GalleryPage(Page):
-    """Seite aus einem oder mehreren Bildabschnitten (Commercial, Outdoor, Other)."""
+class PhotoLibraryPage(Page):
+    """Foto-Bibliothek: alle Fotos auf einer Seite, oben Filter nach Tags.
+
+    Die Tags stehen am Bild selbst (Bilder -> Bild bearbeiten -> Tags). Welche
+    Tags als Filter erscheinen und in welcher Reihenfolge, legt die Seite fest.
+    Ohne aktiven Filter zeigt sie alle Fotos gemischt.
+    """
 
     intro = RichTextField("Einleitung", blank=True, features=SIMPLE_FEATURES)
 
     content_panels = Page.content_panels + [
         FieldPanel("intro"),
-        InlinePanel("sections", heading="Abschnitte", label="Abschnitt"),
+        InlinePanel(
+            "filters",
+            heading="Filter",
+            label="Filter",
+            help_text="Tags, nach denen Besucher filtern können. Ein Bild erscheint unter einem Filter, wenn es diesen Tag trägt.",
+        ),
+        MultipleChooserPanel("photos", heading="Fotos", label="Foto", chooser_field_name="image"),
     ]
 
     parent_page_types = ["home.HomePage"]
     subpage_types = []
 
     class Meta:
-        verbose_name = "Galerie-Seite"
-        verbose_name_plural = "Galerie-Seiten"
+        verbose_name = "Foto-Bibliothek"
+        verbose_name_plural = "Foto-Bibliotheken"
 
     def get_context(self, request, *args, **kwargs):
         context = super().get_context(request, *args, **kwargs)
-        context["sections"] = self.sections.prefetch_related(
-            models.Prefetch(
-                "images", queryset=image_specs.with_renditions(GallerySectionImage.objects.all())
-            ),
-            models.Prefetch("videos", queryset=GallerySectionVideo.objects.select_related("video")),
-        )
+        filters = list(self.filters.select_related("tag"))
+        photos = list(image_specs.with_renditions(self.photos.all()).prefetch_related("image__tags"))
+        filter_slugs = {f.tag.slug for f in filters}
+        for photo in photos:
+            photo.tag_slugs = sorted({tag.slug for tag in photo.image.tags.all()} & filter_slugs)
+
+        # Mit ?tag=... funktioniert der Filter auch ohne JavaScript und als teilbarer Link.
+        active = request.GET.get("tag", "")
+        if active not in filter_slugs:
+            active = ""
+        for photo in photos:
+            photo.visible = not active or active in photo.tag_slugs
+
+        visible_count = sum(photo.visible for photo in photos)
+        context.update(filters=filters, photos=photos, active_filter=active, visible_count=visible_count)
         return context
 
     def warm_renditions(self):
-        for section in self.sections.all():
-            specs = image_specs.BY_LAYOUT[section.layout]
-            image_specs.warm([item.image for item in section.images.select_related("image")], specs)
+        image_specs.warm([item.image for item in self.photos.select_related("image")], image_specs.GRID)
 
 
-class GallerySection(ClusterableModel, Orderable):
-    """Ein Abschnitt einer Galerie-Seite: optionale Überschrift und Text, dann Bilder und/oder Videos."""
+class LibraryFilter(Orderable):
+    page = ParentalKey(PhotoLibraryPage, on_delete=models.CASCADE, related_name="filters")
+    tag = models.ForeignKey("taggit.Tag", verbose_name="Tag", on_delete=models.CASCADE, related_name="+")
+    label = models.CharField(
+        "Beschriftung", max_length=40, blank=True, help_text="Leer lassen, um den Namen des Tags zu zeigen."
+    )
 
-    LAYOUT_CHOICES = [
-        ("grid", "Raster (ganze Bilder, gleich hohe Zeilen)"),
-        ("strip_large", "Bildreihe zum Blättern, groß (Hochformat-Ausschnitte)"),
-        ("strip_small", "Bildreihe zum Blättern, klein (Hochformat-Ausschnitte)"),
-    ]
-
-    page = ParentalKey(GalleryPage, on_delete=models.CASCADE, related_name="sections")
-    heading = models.CharField("Überschrift", max_length=120, blank=True)
-    text = RichTextField("Text", blank=True, features=SIMPLE_FEATURES)
-    layout = models.CharField("Darstellung", max_length=20, choices=LAYOUT_CHOICES, default="grid")
-
-    panels = [
-        FieldPanel("heading"),
-        FieldPanel("text"),
-        FieldPanel("layout"),
-        MultipleChooserPanel("images", heading="Bilder", label="Bild", chooser_field_name="image"),
-        MultipleChooserPanel("videos", heading="Videos", label="Video", chooser_field_name="video"),
-    ]
+    panels = [FieldPanel("tag"), FieldPanel("label")]
 
     class Meta(Orderable.Meta):
-        verbose_name = "Abschnitt"
-        verbose_name_plural = "Abschnitte"
+        verbose_name = "Filter"
+        verbose_name_plural = "Filter"
+
+    @property
+    def name(self):
+        return self.label or self.tag.name
 
 
-class GallerySectionImage(Orderable):
-    section = ParentalKey(GallerySection, on_delete=models.CASCADE, related_name="images")
+class LibraryPhoto(Orderable):
+    page = ParentalKey(PhotoLibraryPage, on_delete=models.CASCADE, related_name="photos")
     image = models.ForeignKey(
-        get_image_model_string(), verbose_name="Bild", on_delete=models.CASCADE, related_name="+"
+        get_image_model_string(), verbose_name="Foto", on_delete=models.CASCADE, related_name="+"
     )
 
     panels = [FieldPanel("image")]
-
-
-class GallerySectionVideo(Orderable):
-    """Kurzes Video ohne Ton, das in Schleife läuft (Cinemagramm). Als Dokument hochgeladen (MP4)."""
-
-    section = ParentalKey(GallerySection, on_delete=models.CASCADE, related_name="videos")
-    video = models.ForeignKey(
-        get_document_model_string(),
-        verbose_name="Video (MP4)",
-        on_delete=models.CASCADE,
-        related_name="+",
-    )
-
-    panels = [FieldPanel("video")]
 
 
 class AboutPage(Page):

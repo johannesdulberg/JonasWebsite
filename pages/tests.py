@@ -1,4 +1,5 @@
 import json
+import re
 import tempfile
 from io import StringIO
 from pathlib import Path
@@ -13,7 +14,7 @@ from wagtail.models import Page, Site
 from core.models import SiteSettings
 from home.models import HomePage
 from pages.management.commands.import_wix import HOME_BOTTOM, HOME_TOP
-from pages.models import AboutPage, BookingPage, GalleryPage, StandardPage
+from pages.models import AboutPage, BookingPage, PhotoLibraryPage, StandardPage
 
 ACCOUNT = "c5ec14"
 
@@ -89,7 +90,6 @@ class ImportTestCase(TestCase):
             + [source.image("other", tile=(160, 456)) for _ in range(2)]
             + [t("h2", "Leer")]
         )
-        (folder / "other" / "video_01_abc.mp4").write_bytes(b"kein echtes Video")
         source.pages["booking"] = [
             t("p", "Verschiedene Projekte erfordern verschiedene Herangehensweisen."),
             t("p", "Ich freu mich von Ihnen zu hören!"),
@@ -143,22 +143,44 @@ class ImportWixTests(ImportTestCase):
         self.assertIn("fill-320x912", html)
         self.assertIn("max-2000x2000", html)
 
+    def library(self):
+        return PhotoLibraryPage.objects.get(slug="foto")
+
+    def test_library_gets_all_photos_with_tags_and_filters(self):
+        self.run_import("--seite", "foto")
+        library = self.library()
+        photos = list(library.photos.select_related("image"))
+        self.assertEqual(len(photos), 10)  # 3 Commercial, 2 Outdoor, 3 Porträt, 2 Reitsport
+        self.assertEqual([f.tag.name for f in library.filters.all()], ["Outdoor", "Commercial", "Porträt", "Reitsport"])
+        tags = [set(photo.image.tags.names()) for photo in photos]
+        # Gemischt: abwechselnd aus Commercial, Outdoor und Other.
+        self.assertEqual(tags[:3], [{"Commercial"}, {"Outdoor"}, {"Porträt"}])
+        self.assertEqual(sum(t == {"Reitsport"} for t in tags), 2)
+        # Fokuspunkt der Wix-Seite bleibt erhalten (Porträt: 0.5 / 0.25 auf 60 x 40).
+        portrait = next(p.image for p in photos if "Porträt" in p.image.tags.names())
+        self.assertEqual((portrait.focal_point_x, portrait.focal_point_y), (30, 10))
+
+    def hidden_items(self, url):
+        """Anzahl der Fotos, die die Seite ohne JavaScript ausblendet."""
+        html = self.client.get(url).content.decode()
+        items = re.findall(r"<li data-collage-item[^>]*>", html)
+        return len(items), sum(bool(re.search(r"\shidden\s", item)) for item in items), html
+
+    def test_library_filters_without_javascript(self):
+        self.run_import("--seite", "foto")
+        total, hidden, html = self.hidden_items("/foto/")
+        self.assertEqual((total, hidden), (10, 0))
+        self.assertIn('href="/foto/?tag=reitsport"', html)
+
+        total, hidden, html = self.hidden_items("/foto/?tag=reitsport")
+        self.assertEqual((total, hidden), (10, 8))
+        self.assertIn('data-filter="reitsport" aria-current="true"', html)
+        # Unbekannter Filter: alle Fotos.
+        self.assertEqual(self.hidden_items("/foto/?tag=gibtsnicht")[:2], (10, 0))
+
     def test_all_pages_are_filled_and_render(self):
         output = self.run_import()
         home = self.site.root_page
-
-        commercial = GalleryPage.objects.get(slug="commercial")
-        section = commercial.sections.get()
-        self.assertEqual((section.layout, section.images.count(), section.text), ("grid", 3, ""))
-
-        other = GalleryPage.objects.get(slug="other")
-        sections = list(other.sections.all())
-        self.assertEqual([s.heading for s in sections], ["Cinemagramm", "Portaits", "Reitsport"])
-        self.assertEqual([s.layout for s in sections], ["grid", "strip_small", "strip_large"])
-        self.assertEqual([s.images.count() for s in sections], [0, 3, 2])
-        self.assertEqual(sections[0].videos.count(), 1)
-        self.assertEqual(sections[0].text, "<p>Kurze Bild-Video-Hybride.</p>")
-        self.assertIn("Abschnitt ohne Bilder ausgelassen: Leer", output)
 
         booking = BookingPage.objects.get(slug="booking")
         self.assertEqual(booking.strip_images.count(), 2)
@@ -180,12 +202,12 @@ class ImportWixTests(ImportTestCase):
 
         self.assertEqual(
             [page.slug for page in home.get_children().live().in_menu()],
-            ["commercial", "outdoor", "other", "booking", "about"],
+            ["foto", "video", "social", "booking", "about"],
         )
         for slug, expected in [
-            ("commercial", "data-lightbox-item"),
-            ("outdoor", "data-lightbox-item"),
-            ("other", "<video"),
+            ("foto", "data-lightbox-item"),
+            ("video", "Video"),
+            ("social", "Social"),
             ("booking", "data-inactive-form"),
             ("about", "Fotografie war"),
             ("impressum", "Datenschutzerklärung"),
@@ -195,7 +217,7 @@ class ImportWixTests(ImportTestCase):
             self.assertIn(expected, response.content.decode(), slug)
 
         # Fußzeilen-Texte von Wix landen nicht im Inhalt.
-        self.assertNotIn("Wallpaper", self.client.get("/commercial/").content.decode().split("<footer")[0])
+        self.assertNotIn("Wallpaper", self.client.get("/foto/").content.decode().split("<footer")[0])
 
     def test_second_run_changes_nothing_and_neu_does_not_duplicate(self):
         self.run_import()
@@ -203,14 +225,14 @@ class ImportWixTests(ImportTestCase):
         images, pages = Image.objects.count(), Page.objects.count()
 
         output = self.run_import()
-        self.assertEqual(output.count("unverändert"), 8)  # zwei Galerien der Startseite + sechs Seiten
+        self.assertEqual(output.count("unverändert"), 6)  # zwei Galerien der Startseite + vier Seiten
         self.run_import("--neu")
         self.assertEqual((Image.objects.count(), Page.objects.count()), (images, pages))
-        self.assertEqual(GalleryPage.objects.get(slug="other").sections.count(), 3)
+        self.assertEqual(self.library().photos.count(), 10)
 
     def test_placeholders_are_replaced_in_place(self):
         home = self.site.root_page
-        for title in ["Commercial", "Outdoor", "Other", "Booking", "About"]:
+        for title in ["Foto", "Video", "Social", "Booking", "About"]:
             home.add_child(instance=HomePage(title=title, slug=title.lower(), show_in_menus=True))
         placeholder = home.add_child(instance=HomePage(title="Impressum", slug="impressum"))
         extra = home.add_child(instance=HomePage(title="Eigene Seite", slug="eigene", show_in_menus=True))
@@ -225,9 +247,9 @@ class ImportWixTests(ImportTestCase):
             [(page.slug, page.specific_class.__name__) for page in home.get_children()],
             [
                 ("eigene", "HomePage"),
-                ("commercial", "GalleryPage"),
-                ("outdoor", "GalleryPage"),
-                ("other", "GalleryPage"),
+                ("foto", "PhotoLibraryPage"),
+                ("video", "StandardPage"),
+                ("social", "StandardPage"),
                 ("booking", "BookingPage"),
                 ("about", "AboutPage"),
                 ("impressum", "StandardPage"),
@@ -238,6 +260,18 @@ class ImportWixTests(ImportTestCase):
         self.assertEqual(legal.specific_class, StandardPage)
         self.assertIn('href="/impressum/"', self.client.get("/").content.decode())
 
+    def test_new_pages_are_sorted_into_menu_order(self):
+        # Zustand nach der Migration: alte Galerie-Seiten weg, Booking und About noch da.
+        home = self.site.root_page
+        for title in ["Booking", "About"]:
+            home.add_child(instance=BookingPage(title=title, slug=title.lower(), show_in_menus=True) if title == "Booking"
+                           else AboutPage(title=title, slug="about", show_in_menus=True))
+        self.run_import("--seite", "impressum")
+        self.assertEqual(
+            [page.slug for page in Page.objects.get(pk=home.pk).get_children().in_menu()],
+            ["foto", "video", "social", "booking", "about"],
+        )
+
     def test_images_only_in_gallery_data_are_added(self):
         manifest = json.loads((self.source.folder / "manifest.json").read_text())
         extra_id = fake_id(99999)
@@ -246,14 +280,14 @@ class ImportWixTests(ImportTestCase):
             {"type": "image", "url": f"https://static.wixstatic.com/media/{ACCOUNT}_{extra_id}~mv2.jpg", "found_in": "data"}
         ]
         (self.source.folder / "manifest.json").write_text(json.dumps(manifest))
-        output = self.run_import("--seite", "outdoor")
-        self.assertIn("1 nachgeladene Galeriebilder", output)
-        self.assertEqual(GalleryPage.objects.get(slug="outdoor").sections.get().images.count(), 3)
+        self.run_import("--seite", "foto")
+        outdoor = [p for p in self.library().photos.all() if "Outdoor" in p.image.tags.names()]
+        self.assertEqual(len(outdoor), 3)
 
     def test_without_texts_in_manifest_galleries_still_work(self):
         (self.source.folder / "manifest.json").unlink()
-        output = self.run_import("--seite", "commercial", "--seite", "about")
-        self.assertEqual(GalleryPage.objects.get(slug="commercial").sections.get().images.count(), 3)
+        self.run_import("--seite", "foto", "--seite", "about")
+        self.assertEqual(self.library().photos.count(), 10)
         # Ohne ausgelesenen Text kommt der hinterlegte Wortlaut der Wix-Seite.
         self.assertIn("Mechatronik Studiums", AboutPage.objects.get(slug="about").body)
 
@@ -266,6 +300,9 @@ class AdminTests(ImportTestCase):
         for page in [self.site.root_page, *self.site.root_page.get_children()]:
             response = self.client.get(f"/admin/pages/{page.pk}/edit/")
             self.assertEqual(response.status_code, 200, page.slug)
-        html = self.client.get(f"/admin/pages/{GalleryPage.objects.get(slug='other').pk}/edit/").content.decode()
-        self.assertIn("Abschnitte", html)
+        html = self.client.get(f"/admin/pages/{self.library_pk()}/edit/").content.decode()
+        self.assertIn("Filter", html)
         self.assertIn("Reitsport", html)
+
+    def library_pk(self):
+        return PhotoLibraryPage.objects.get(slug="foto").pk

@@ -101,14 +101,14 @@ class SeedSiteTests(TestCase):
         site = Site.objects.get(is_default_site=True)
         menu = site.root_page.get_children().live().in_menu()
         self.assertEqual(
-            [page.title for page in menu], ["Commercial", "Outdoor", "Other", "Booking", "About"]
+            [page.title for page in menu], ["Foto", "Video", "Social", "Booking", "About"]
         )
         settings = SiteSettings.for_site(site)
         self.assertEqual(settings.postal_code_city, "59494 Soest")
         self.assertEqual(settings.legal_page.slug, "impressum")
         self.assertEqual(
             [page.specific_class.__name__ for page in site.root_page.get_children()],
-            ["GalleryPage", "GalleryPage", "GalleryPage", "BookingPage", "AboutPage", "StandardPage"],
+            ["PhotoLibraryPage", "StandardPage", "StandardPage", "BookingPage", "AboutPage", "StandardPage"],
         )
         self.assertIsNotNone(settings.footer_download)
         self.assertEqual(

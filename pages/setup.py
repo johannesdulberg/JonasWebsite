@@ -1,4 +1,4 @@
-"""Die Seitenstruktur der bisherigen Wix-Seite: welche Seiten es gibt und von welchem Typ.
+"""Die Seitenstruktur: welche Seiten es unter Home gibt und von welchem Typ.
 
 Wird von seed_site (Grundgerüst) und import_wix (Inhalte) benutzt.
 """
@@ -8,13 +8,13 @@ from wagtail.models import Page
 from core.models import SiteSettings
 from home.models import HomePage
 
-from .models import AboutPage, BookingPage, GalleryPage, StandardPage
+from .models import AboutPage, BookingPage, PhotoLibraryPage, StandardPage
 
 # (Titel, Slug, im Menü anzeigen, Seitentyp). Reihenfolge = Reihenfolge im Menü.
 PAGES = [
-    ("Commercial", "commercial", True, GalleryPage),
-    ("Outdoor", "outdoor", True, GalleryPage),
-    ("Other", "other", True, GalleryPage),
+    ("Foto", "foto", True, PhotoLibraryPage),
+    ("Video", "video", True, StandardPage),
+    ("Social", "social", True, StandardPage),
     ("Booking", "booking", True, BookingPage),
     ("About", "about", True, AboutPage),
     ("Impressum", "impressum", False, StandardPage),
@@ -30,7 +30,6 @@ def ensure_pages(site, log=lambda message: None):
     """
     home = site.root_page
     result = {}
-    replaced = False
 
     for title, slug, in_menu, model in PAGES:
         existing = home.get_children().filter(slug=slug).first()
@@ -45,7 +44,6 @@ def ensure_pages(site, log=lambda message: None):
                 continue
             title, in_menu = existing.title, existing.show_in_menus
             existing.delete()
-            replaced = True
             log(f"Platzhalter ersetzt: {title}")
         else:
             log(f"Seite angelegt: {title}")
@@ -54,13 +52,15 @@ def ensure_pages(site, log=lambda message: None):
         home = Page.objects.get(pk=home.pk)
         result[slug] = home.add_child(instance=model(title=title, slug=slug, show_in_menus=in_menu))
 
-    if replaced:
-        # Ersetzte Seiten hängen am Ende. Reihenfolge wiederherstellen: der Reihe
-        # nach ans Ende schieben. Seiten, die nicht in der Liste stehen, bleiben davor.
-        for _title, slug, _in_menu, _model in PAGES:
-            if slug in result:
-                Page.objects.get(pk=result[slug].pk).move(Page.objects.get(pk=home.pk), pos="last-child")
-                result[slug] = result[slug].__class__.objects.get(pk=result[slug].pk)
+    # Reihenfolge im Seitenbaum = Reihenfolge im Menü. Neue und ersetzte Seiten
+    # hängen zunächst am Ende; wenn die Reihenfolge nicht stimmt, der Reihe nach
+    # ans Ende schieben. Seiten, die nicht in der Liste stehen, bleiben davor.
+    wanted = [slug for _title, slug, _in_menu, _model in PAGES if slug in result]
+    current = [child.slug for child in Page.objects.get(pk=home.pk).get_children() if child.slug in result]
+    if current != wanted:
+        for slug in wanted:
+            Page.objects.get(pk=result[slug].pk).move(Page.objects.get(pk=home.pk), pos="last-child")
+            result[slug] = result[slug].__class__.objects.get(pk=result[slug].pk)
 
     # Der Impressum-Link der Fußzeile zeigte ggf. auf den gelöschten Platzhalter.
     settings = SiteSettings.for_site(site)

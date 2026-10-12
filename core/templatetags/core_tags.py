@@ -34,3 +34,13 @@ def aspect_ratio(image):
     if not image or not image.height:
         return "1.5"
     return f"{image.width / image.height:.4f}"
+
+
+@register.filter
+def focal_position(image):
+    """CSS object-position aus dem Fokuspunkt, damit beschnittene Kacheln die richtige Stelle zeigen."""
+    if not image or image.focal_point_x is None or not image.width or not image.height:
+        return "object-position: 50% 50%"
+    x = 100 * image.focal_point_x / image.width
+    y = 100 * image.focal_point_y / image.height
+    return f"object-position: {x:.1f}% {y:.1f}%"

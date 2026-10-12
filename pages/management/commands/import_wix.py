@@ -5,12 +5,15 @@
 Voraussetzung: Der Ordner wix_import/ ist gefüllt (scripts/fetch_wix_images.py).
 
 Der Befehl tut dasselbe wie jemand im Admin: Er lädt Fotos in die
-Bildbibliothek (eine Sammlung pro Seite), setzt Fokuspunkte, trägt Texte ein
-und veröffentlicht die Seiten. Danach lässt sich alles im Admin bearbeiten.
+Bildbibliothek, setzt Fokuspunkte und Tags, trägt Texte ein und
+veröffentlicht die Seiten. Danach lässt sich alles im Admin bearbeiten.
+
+Die Fotos der alten Seiten Commercial, Outdoor und Other landen in der
+Foto-Bibliothek (Seite "Foto"), jeweils mit einem Tag für ihre Herkunft.
 
 Eine Seite, die schon Inhalt hat, bleibt unverändert. Mit --neu wird ihr
 Inhalt ersetzt (Bilder in der Bibliothek bleiben erhalten). Mit --seite lässt
-sich das auf einzelne Seiten begrenzen, z. B. --seite other --neu.
+sich das auf einzelne Seiten begrenzen, z. B. --seite foto --neu.
 """
 
 import json
@@ -18,20 +21,15 @@ import re
 from pathlib import Path
 
 from django.conf import settings
-from django.core.files import File
 from django.core.files.images import ImageFile
 from django.core.management.base import BaseCommand, CommandError
-from wagtail.documents import get_document_model
 from wagtail.images import get_image_model
 from wagtail.models import Collection, Site
 
 from home.models import HomeBottomGalleryImage, HomePage, HomeTopGalleryImage
-from pages.models import (
-    BookingStripImage,
-    GallerySection,
-    GallerySectionImage,
-    GallerySectionVideo,
-)
+from taggit.models import Tag
+
+from pages.models import BookingStripImage, LibraryFilter, LibraryPhoto
 from pages.setup import ensure_pages
 
 # Die beiden Galerien der Wix-Startseite in ihrer Reihenfolge.
@@ -108,6 +106,16 @@ ABOUT_TEXT = (
     '<a href="https://www.tiktok.com/@north.johnny">TikTok</a>).</p>'
 )
 
+PAGE_KEYS = ["home", "foto", "booking", "about", "impressum"]
+
+# Aus welchen Wix-Seiten die Foto-Bibliothek entsteht und welchen Tag die Fotos
+# bekommen. Bei "other" bestimmt die Überschrift des Abschnitts den Tag.
+LIBRARY_SOURCES = [("commercial", "Commercial"), ("outdoor", "Outdoor"), ("other", None)]
+# "porta" fängt den Tippfehler "Portaits" auf der Wix-Seite ab. Reitsport zuerst, weil es "port" enthält.
+HEADING_TAGS_OTHER = [("reit", "Reitsport"), ("portr", "Porträt"), ("porta", "Porträt")]
+# Reihenfolge der Filter auf der Seite; weitere Tags folgen danach.
+FILTER_ORDER = ["Outdoor", "Commercial", "Porträt", "Reitsport"]
+
 IMAGE_SUFFIXES = {".jpg", ".jpeg", ".png", ".webp", ".gif"}
 HEADING_TAGS = {"h1", "h2", "h3", "h4", "h5", "h6"}
 
@@ -135,7 +143,7 @@ class Command(BaseCommand):
         parser.add_argument(
             "--seite",
             action="append",
-            choices=["home", "commercial", "outdoor", "other", "booking", "about", "impressum"],
+            choices=PAGE_KEYS,
             help="Nur diese Seite bearbeiten (mehrfach angebbar). Standard: alle.",
         )
         parser.add_argument(
@@ -153,7 +161,7 @@ class Command(BaseCommand):
                 f"{self.source} fehlt. Zuerst laden: python scripts/fetch_wix_images.py"
             )
         self.force = options["neu"]
-        wanted = options["seite"] or ["home", "commercial", "outdoor", "other", "booking", "about", "impressum"]
+        wanted = options["seite"] or PAGE_KEYS
 
         manifest_file = self.source / "manifest.json"
         self.manifest = {}
@@ -166,9 +174,7 @@ class Command(BaseCommand):
 
         steps = {
             "home": lambda: self.import_home(HomePage.objects.get(pk=site.root_page_id)),
-            "commercial": lambda: self.import_gallery(pages.get("commercial"), "commercial"),
-            "outdoor": lambda: self.import_gallery(pages.get("outdoor"), "outdoor"),
-            "other": lambda: self.import_gallery(pages.get("other"), "other"),
+            "foto": lambda: self.import_library(pages.get("foto")),
             "booking": lambda: self.import_booking(pages.get("booking")),
             "about": lambda: self.import_about(pages.get("about")),
             "impressum": lambda: self.import_standard(pages.get("impressum"), "impressum"),
@@ -183,8 +189,20 @@ class Command(BaseCommand):
         if hasattr(page, "warm_renditions"):
             self.stdout.write("   erzeuge Bildgrößen ...")
             # Frisch aus der Datenbank laden: Dort stehen die eben gespeicherten Einträge.
-            type(page).objects.get(pk=page.pk).warm_renditions()
+            self.warm(type(page).objects.get(pk=page.pk))
         self.stdout.write(self.style.SUCCESS("   veröffentlicht"))
+
+    def warm(self, page):
+        """Bildgrößen vorab erzeugen. Ein kaputtes Bild soll den restlichen Import nicht stoppen."""
+        try:
+            page.warm_renditions()
+        except Exception as error:
+            self.stdout.write(
+                self.style.WARNING(
+                    f"   Bildgrößen nicht vollständig erzeugt ({type(error).__name__}: {error}). "
+                    "Die Seite erzeugt sie dann beim ersten Aufruf."
+                )
+            )
 
     def skip(self, page, key, has_content):
         """Prüft, ob eine Seite bearbeitet werden soll, und meldet den Grund, wenn nicht."""
@@ -304,19 +322,6 @@ class Command(BaseCommand):
             image.save()
         return image
 
-    def get_video(self, path, title, collection):
-        Document = get_document_model()
-        with path.open("rb") as handle:
-            document = Document(title=title, collection=collection)
-            document.file = File(handle, name=path.name)
-            document._set_document_file_metadata()
-            handle.seek(0)
-            existing = Document.objects.filter(file_hash=document.file_hash).first()
-            if existing:
-                return existing
-            document.save()
-        return document
-
     def images(self, key, entries, title, collection):
         """Lädt die genannten Bilder. Gibt (Bilder, fehlende IDs) zurück."""
         files, images, missing = self.files(key), [], []
@@ -368,93 +373,70 @@ class Command(BaseCommand):
         else:
             # Auch ohne Änderung: fehlende Bildgrößen nachziehen (z. B. die der Großansicht).
             self.stdout.write("   erzeuge fehlende Bildgrößen ...")
-            home.warm_renditions()
+            self.warm(home)
 
-    # ---------------------------------------------------------- Galerie-Seiten
+    # ---------------------------------------------------------- Foto-Bibliothek
 
-    def import_gallery(self, page, key):
-        if self.skip(page, key, page is not None and page.sections.exists()):
+    def import_library(self, page):
+        if page is None:
+            self.stdout.write(self.style.WARNING("   Seite fehlt oder hat einen anderen Typ, übersprungen."))
             return
-        collection = self.collection(page.title)
+        if page.photos.exists() and not self.force:
+            self.stdout.write("   hat schon Fotos, unverändert (ersetzen mit --neu).")
+            return
 
-        # Abschnitte bilden: Jede Überschrift beginnt einen neuen, Absätze und
-        # Bilder danach gehören dazu. Ohne Inhaltsliste gibt es einen Abschnitt.
-        drafts = []
+        collection = self.collection("Fotos")
+        by_source = []  # pro Wix-Seite eine Liste aus (Bild, Tag)
+        for key, default_tag in LIBRARY_SOURCES:
+            pairs = self.library_entries(key, default_tag)
+            loaded = []
+            for entry, tag in pairs:
+                images = self.images(key, [entry], tag, collection)
+                if images:
+                    images[0].tags.add(tag)
+                    loaded.append((images[0], tag))
+            if loaded:
+                self.stdout.write(f"   {key}: {len(loaded)} Fotos")
+            by_source.append(loaded)
 
-        def current():
-            if not drafts:
-                drafts.append({"heading": "", "texts": [], "entries": []})
-            return drafts[-1]
+        # Gemischte Reihenfolge: abwechselnd aus jeder Quelle, damit "Alle" nicht
+        # mit 25 Werbefotos am Stück beginnt.
+        photos, seen = [], set()
+        for round_ in range(max((len(x) for x in by_source), default=0)):
+            for loaded in by_source:
+                if round_ < len(loaded) and loaded[round_][0].pk not in seen:
+                    seen.add(loaded[round_][0].pk)
+                    photos.append(loaded[round_])
+        if not photos:
+            self.stdout.write(self.style.WARNING("   Keine Fotos gefunden. Erst scripts/fetch_wix_images.py ausführen."))
+            return
 
-        content = self.content(key)
-        if content is None:
-            current()["entries"] = self.image_entries(key)
-        else:
-            seen = set()
-            for item in content:
-                if item["type"] == "text" and item["tag"] in HEADING_TAGS:
-                    drafts.append({"heading": item["text"], "texts": [], "entries": []})
-                elif item["type"] == "text" and item["tag"] in {"p", "li"}:
-                    current()["texts"].append(item["html"])
-                elif item["type"] == "image" and wix_id(item["id"]) not in seen:
-                    seen.add(wix_id(item["id"]))
-                    current()["entries"].append(item)
-
-            # Nachgeladene Galeriebilder hängen am letzten Abschnitt mit Bildern.
-            extras = self.extra_entries(key, seen)
-            if extras:
-                target = next((d for d in reversed(drafts) if d["entries"]), None) or current()
-                target["entries"].extend(extras)
-                self.stdout.write(f"   {len(extras)} nachgeladene Galeriebilder ergänzt")
-
-        # Videos stehen nicht in der Inhaltsliste. Sie kommen in den Abschnitt,
-        # dessen Überschrift nach Cinemagramm klingt, sonst in den ersten.
-        video_files = sorted((self.source / key).glob("*.mp4")) if (self.source / key).is_dir() else []
-        if video_files:
-            target = next((d for d in drafts if "cinema" in d["heading"].casefold()), None) or current()
-            target["videos"] = video_files
-
-        sections = []
-        for draft in drafts:
-            images = self.images(key, draft["entries"], page.title, collection)
-            videos = [
-                self.get_video(path, f"{page.title} Video {n:02d}", collection)
-                for n, path in enumerate(draft.get("videos", []), start=1)
-            ]
-            if not images and not videos:
-                if draft["heading"] or draft["texts"]:
-                    self.stdout.write(
-                        self.style.WARNING(f"   Abschnitt ohne Bilder ausgelassen: {draft['heading'] or '(ohne Überschrift)'}")
-                    )
-                continue
-            section = GallerySection(
-                heading=draft["heading"][:120],
-                text="".join(f"<p>{text}</p>" for text in draft["texts"]),
-                layout=self.layout_for(draft["entries"]),
-                sort_order=len(sections),
-            )
-            section.images = [GallerySectionImage(image=image, sort_order=n) for n, image in enumerate(images)]
-            section.videos = [GallerySectionVideo(video=video, sort_order=n) for n, video in enumerate(videos)]
-            sections.append(section)
-            self.stdout.write(
-                self.style.SUCCESS(
-                    f"   Abschnitt {section.heading or '(ohne Überschrift)'}: {len(images)} Bilder, "
-                    f"{len(videos)} Videos, Darstellung {section.get_layout_display()}"
-                )
-            )
-
-        page.sections = sections
+        used = {tag for _image, tag in photos}
+        ordered = [t for t in FILTER_ORDER if t in used] + sorted(used - set(FILTER_ORDER))
+        page.filters = [
+            LibraryFilter(tag=Tag.objects.get(name=name), sort_order=n) for n, name in enumerate(ordered)
+        ]
+        page.photos = [LibraryPhoto(image=image, sort_order=n) for n, (image, _tag) in enumerate(photos)]
+        self.stdout.write(self.style.SUCCESS(f"   {len(photos)} Fotos, Filter: {', '.join(ordered)}"))
         self.publish(page)
 
-    @staticmethod
-    def layout_for(entries):
-        """Wählt die Darstellung nach den Kacheln der Wix-Seite: schmale Hochformate werden zur Bildreihe."""
-        tiles = [(e["width"], e["height"]) for e in entries if e.get("width") and e.get("height")]
-        tall = [tile for tile in tiles if tile[1] / tile[0] >= 2]
-        if not tiles or len(tall) < len(tiles) / 2:
-            return "grid"
-        average_width = sum(width for width, _height in tall) / len(tall)
-        return "strip_large" if average_width >= 140 else "strip_small"
+    def library_entries(self, key, default_tag):
+        """Bilder einer Wix-Seite mit ihrem Tag, in Seitenreihenfolge."""
+        content = self.content(key)
+        if content is None:
+            return [(entry, default_tag or "Sonstiges") for entry in self.image_entries(key)]
+        pairs, seen = [], set()
+        tag = default_tag or "Sonstiges"
+        for item in content:
+            if item["type"] == "text" and item["tag"] in HEADING_TAGS and default_tag is None:
+                heading = item["text"].casefold()
+                tag = next((name for part, name in HEADING_TAGS_OTHER if part in heading), item["text"].strip().title())
+            elif item["type"] == "image" and wix_id(item["id"]) not in seen:
+                seen.add(wix_id(item["id"]))
+                pairs.append((item, tag))
+        # Nachgeladene Galeriebilder bekommen den Tag des letzten Abschnitts.
+        pairs += [(entry, tag) for entry in self.extra_entries(key, seen)]
+        return pairs
 
     # ------------------------------------------------------------------ Booking
 

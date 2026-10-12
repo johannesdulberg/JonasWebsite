@@ -1,11 +1,11 @@
-{% load wagtailimages_tags %}
+{% load wagtailimages_tags core_tags %}
 {% comment %}
 Ein Galeriebild: Link auf die große Fassung, die site.js als Großansicht öffnet
 (ohne JavaScript öffnet der Link das Bild direkt). Beim Überfahren mit der Maus
 wird das Bild leicht vergrößert und abgedunkelt.
 
   image:  das Bild
-  layout: "grid", "strip_large" oder "strip_small"
+  layout: "grid" (Foto-Bibliothek), "strip_large" oder "strip_small" (Bildreihen)
 
 Die Größen müssen zu core/images.py passen.
 {% endcomment %}
@@ -17,7 +17,7 @@ Die Größen müssen zu core/images.py passen.
     {% elif layout == "strip_small" %}
     {% srcset_image image fill-{101x289,202x578,303x867} format-webp sizes="(min-width: 980px) 101px, 15vw" alt=image.description loading="lazy" class="block h-auto w-full transition-transform duration-500 ease-out group-hover:scale-105" %}
     {% else %}
-    {% srcset_image image width-{480,960,1440} format-webp sizes="(min-width: 1024px) 34vw, (min-width: 640px) 50vw, 100vw" alt=image.description loading="lazy" class="block size-full object-cover transition-transform duration-500 ease-out group-hover:scale-105" %}
+    {% srcset_image image width-{480,960,1440} format-webp sizes="(min-width: 768px) 40vw, 50vw" alt=image.description loading="lazy" style=image|focal_position class="block size-full object-cover transition-transform duration-500 ease-out group-hover:scale-105" %}
     {% endif %}
     <span class="pointer-events-none absolute inset-0 bg-black/55 opacity-0 transition-opacity duration-300 group-hover:opacity-100" aria-hidden="true"></span>
 </a>

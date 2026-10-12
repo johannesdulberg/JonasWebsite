@@ -105,7 +105,8 @@ document.querySelectorAll("form[data-inactive-form]").forEach((form) => {
     };
 
     const open = (group, item) => {
-        items = [...group.querySelectorAll("[data-lightbox-item]")];
+        // Nur sichtbare Bilder: ausgefilterte und die ausgeblendete Ersatzliste der Collage zählen nicht.
+        items = [...group.querySelectorAll("[data-lightbox-item]")].filter((el) => el.getClientRects().length);
         opener = item;
         prev.hidden = next.hidden = items.length < 2;
         show(items.indexOf(item));
@@ -158,4 +159,86 @@ document.querySelectorAll("form[data-inactive-form]").forEach((form) => {
         image.removeAttribute("src");
         if (opener) opener.focus();
     });
+})();
+
+// Foto-Bibliothek: Filter ohne Neuladen und Collage am Desktop.
+(() => {
+    const collage = document.querySelector("[data-collage]");
+    if (!collage) return;
+    const source = collage.querySelector("[data-collage-source]");
+    const items = [...source.querySelectorAll("[data-collage-item]")];
+    const empty = document.querySelector("[data-collage-empty]");
+    const desktop = window.matchMedia("(min-width: 768px)");
+
+    // Ein Baustein: 12 Spalten x 6 Zeilen, 7 Felder ohne Lücken.
+    // [Spalte von, bis, Zeile von, bis, Form] mit Form q = quer, h = hoch.
+    const BLOCK = [
+        [1, 5, 1, 3, "q"], [5, 8, 1, 5, "h"], [8, 13, 1, 4, "q"], [1, 5, 3, 5, "q"],
+        [8, 11, 4, 7, "q"], [11, 13, 4, 7, "h"], [1, 8, 5, 7, "q"],
+    ];
+
+    const tile = (item, style) => {
+        const link = item.querySelector("a").cloneNode(true);
+        link.setAttribute("style", style);
+        return link;
+    };
+
+    const layout = () => {
+        collage.querySelector("[data-collage-view]")?.remove();
+        const visible = items.filter((item) => !item.hidden);
+        if (empty) empty.hidden = visible.length > 0;
+        source.hidden = desktop.matches && visible.length > 0;
+        if (!desktop.matches || !visible.length) return;
+
+        const view = document.createElement("div");
+        view.dataset.collageView = "";
+        view.className = "grid gap-2";
+        let rest = visible;
+        let flip = false;
+        while (rest.length >= BLOCK.length) {
+            // Querformate in breite Felder, Hochformate in hohe, soweit vorhanden.
+            const wide = rest.filter((item) => Number(item.dataset.ratio) >= 1);
+            const tall = rest.filter((item) => Number(item.dataset.ratio) < 1);
+            const chosen = BLOCK.map(([, , , , form]) =>
+                (form === "h" ? tall : wide).shift() || (form === "h" ? wide : tall).shift());
+            rest = rest.filter((item) => !chosen.includes(item));
+            const block = document.createElement("div");
+            block.className = "grid grid-cols-12 grid-rows-6 gap-2 h-[clamp(420px,46vw,640px)]";
+            chosen.forEach((item, n) => {
+                let [a, b, c, d] = BLOCK[n];
+                if (flip) [a, b] = [14 - b, 14 - a];
+                block.append(tile(item, `grid-column:${a}/${b};grid-row:${c}/${d}`));
+            });
+            view.append(block);
+            flip = !flip;
+        }
+        if (rest.length) {
+            // Was nicht mehr für einen Baustein reicht: eine Zeile, gleich hoch, volle Breite.
+            const row = document.createElement("div");
+            row.className = "flex gap-2 h-[clamp(200px,22vw,320px)]";
+            rest.forEach((item) => row.append(tile(item, `flex:${item.dataset.ratio} 1 0`)));
+            view.append(row);
+        }
+        collage.append(view);
+    };
+
+    const select = (slug) => {
+        items.forEach((item) => { item.hidden = Boolean(slug) && !item.dataset.tags.split(" ").includes(slug); });
+        document.querySelectorAll("[data-filter]").forEach((link) => {
+            if (link.dataset.filter === slug) link.setAttribute("aria-current", "true");
+            else link.removeAttribute("aria-current");
+        });
+        layout();
+    };
+
+    document.querySelectorAll("[data-filter]").forEach((link) => {
+        link.addEventListener("click", (event) => {
+            if (event.metaKey || event.ctrlKey || event.shiftKey || event.button !== 0) return;
+            event.preventDefault();
+            history.replaceState(null, "", link.href);
+            select(link.dataset.filter);
+        });
+    });
+    desktop.addEventListener("change", layout);
+    layout();
 })();

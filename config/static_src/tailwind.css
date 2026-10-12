@@ -12,6 +12,9 @@
 @source not "../../media";
 @source not "../../wix_import";
 
+/* Klassen, die nur in site.js stehen (Collage der Foto-Bibliothek). */
+@source "../static/js";
+
 /*
   Schriften liegen als Dateien im Projekt (config/static/fonts) und werden vom
   eigenen Server geladen, nicht von Google oder Wix (DSGVO). Beide stehen unter

@@ -8,10 +8,10 @@ Funktionen und ein einfacher Weg zur Buchung ("Hemmschwelle gegen null").
 
 | Nr. | Wunsch | Sinnvoll | Aufwand | Status |
 | --- | --- | --- | --- | --- |
-| 1 | **Termin direkt buchen**, automatisch, ohne Anruf (das Wichtigste) | sehr | mittel bis groß | offen, Entscheidung nötig: Fremddienst oder selbst gebaut |
+| 1 | **Termin direkt buchen**, automatisch, ohne Anruf (das Wichtigste) | sehr | mittel | offen. Tendenz: selbst gebaut, Arbeitszeiten der Assistentin plus ihr Kalender nur lesend; Entwürfe 1–3 liegen vor |
 | 2 | **Booking-Seite einladender**, Formular, das zum Schreiben einlädt | sehr | klein bis mittel | offen |
-| 3 | **Neues Menü:** Home, Foto, Video, Social, Booking, About | ja | klein | in Arbeit (Konzepte) |
-| 4 | **Foto-Bibliothek:** eine Seite mit allen Fotos, 4–5 Tags zum Filtern (z. B. Outdoor, Commercial), ohne Filter gemischt | ja | klein bis mittel | in Arbeit (Konzepte) |
+| 3 | **Neues Menü:** Home, Foto, Video, Social, Booking, About | ja | klein | umgesetzt (12.10.2026), Video und Social noch leer |
+| 4 | **Foto-Bibliothek:** eine Seite mit allen Fotos, 4–5 Tags zum Filtern (z. B. Outdoor, Commercial), ohne Filter gemischt | ja | klein bis mittel | umgesetzt (12.10.2026), Design offen |
 | 5 | **Mobile First**, professioneller, "cooler" | selbstverständlich | läuft mit | offen |
 | 6 | **About abwechslungsreicher:** Philosophie, Team (Jonas, Ina, Johannes) | ja | klein | offen, Texte und Fotos fehlen |
 | 7 | **Logo-Laufband** von Kunden | ja | klein | offen, Logos und Einverständnis fehlen |

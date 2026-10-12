@@ -13,13 +13,12 @@ LIGHTBOX = ["max-2000x2000|format-webp"]
 STRIP_LARGE = ["fill-160x456|format-webp", "fill-320x912|format-webp"]
 STRIP_SMALL = ["fill-101x289|format-webp", "fill-202x578|format-webp", "fill-303x867|format-webp"]
 
-# Raster: ganze Bilder, unbeschnitten
+# Foto-Bibliothek: ganze Bilder (die Collage beschneidet per CSS)
 GRID = ["width-480|format-webp", "width-960|format-webp", "width-1440|format-webp"]
 
 # Porträt auf der About-Seite
 PORTRAIT = ["fill-320x320|format-webp", "fill-640x640|format-webp"]
 
-BY_LAYOUT = {"grid": GRID, "strip_large": STRIP_LARGE, "strip_small": STRIP_SMALL}
 
 
 def warm(images, specs):

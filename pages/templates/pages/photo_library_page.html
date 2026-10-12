@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% load wagtailcore_tags core_tags %}
+
+{% block content %}
+<div class="mx-auto max-w-7xl px-1.5 md:px-10">
+    <div class="px-4.5 pb-5 pt-4 md:px-0 md:pt-8">
+        <h1 class="text-2xl font-bold md:text-3xl">{{ page.title }}</h1>
+        {% if page.intro %}<div class="rich-text mt-2 max-w-2xl text-muted">{{ page.intro|richtext }}</div>{% endif %}
+
+        {% if filters %}
+        {# Links funktionieren ohne JavaScript (Seite lädt neu). site.js filtert ohne Neuladen. #}
+        <nav aria-label="Filter" class="mt-6 flex flex-wrap gap-2" data-filter-bar>
+            <a href="{% pageurl page %}" data-filter="" {% if not active_filter %}aria-current="true"{% endif %}
+               class="rounded-full border border-ink px-4 py-1.5 text-sm transition-colors aria-[current]:bg-ink aria-[current]:text-paper hover:bg-ink hover:text-paper">Alle</a>
+            {% for filter in filters %}
+            <a href="{% pageurl page %}?tag={{ filter.tag.slug }}" data-filter="{{ filter.tag.slug }}" {% if active_filter == filter.tag.slug %}aria-current="true"{% endif %}
+               class="rounded-full border border-ink px-4 py-1.5 text-sm transition-colors aria-[current]:bg-ink aria-[current]:text-paper hover:bg-ink hover:text-paper">{{ filter.name }}</a>
+            {% endfor %}
+        </nav>
+        {% endif %}
+    </div>
+
+    {% if photos %}
+    {% comment %}
+    Ohne JavaScript und auf dem Handy: ganze Bilder, auf dem Handy in zwei Spalten,
+    am Desktop in gleich hohen Zeilen. site.js baut daraus am Desktop die Collage
+    (data-collage-view) und blendet diese Liste dann aus.
+    {% endcomment %}
+    <div data-lightbox-group data-collage>
+        <ul data-collage-source
+            class="columns-2 gap-1.5 [--row:clamp(170px,17vw,260px)] md:flex md:flex-wrap md:gap-2 md:after:grow-[1000000] md:after:content-['']">
+            {% for photo in photos %}
+            <li data-collage-item data-tags="{{ photo.tag_slugs|join:' ' }}" data-ratio="{{ photo.image|aspect_ratio }}"
+                {% if not photo.visible %}hidden{% endif %}
+                style="--ar: {{ photo.image|aspect_ratio }}"
+                class="mb-1.5 aspect-[var(--ar)] break-inside-avoid md:mb-0 md:grow-[calc(var(--ar)*100)] md:basis-[calc(var(--ar)*var(--row))]">
+                {% include "includes/gallery_item.html" with image=photo.image layout="grid" %}
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    <p data-collage-empty {% if visible_count %}hidden{% endif %} class="px-4.5 py-16 text-center text-muted md:px-0">Keine Fotos unter diesem Filter.</p>
+    {% else %}
+    <p class="px-4.5 py-16 text-sm text-muted md:px-0">Hier sind noch keine Fotos.</p>
+    {% endif %}
+</div>
+{% endblock content %}

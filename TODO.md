@@ -7,6 +7,13 @@
   Offen: Nachricht speichern und per E-Mail zustellen, Spam-Schutz ohne
   Fremddienst, Einwilligungs-Hinweis zum Datenschutz, Bestätigungsmeldung.
 
+- [ ] **Inhalte für Video und Social.** Beide Seiten sind leere Textseiten.
+- [ ] **Cinemagramme wieder zeigen.** Sie lagen auf der alten Seite "Other",
+  die mit der Foto-Bibliothek weggefallen ist. Die Videos sind noch unter
+  Dokumente. Wo sie hinkommen, ist offen (siehe WUENSCHE.md, Nr. 12).
+- [ ] **Design festlegen.** Menü und Foto-Bibliothek haben vorerst das jetzige
+  Aussehen; Entwürfe A–D liegen vor.
+
 ## Vorschläge (nicht umgesetzt, brauchen eine Entscheidung)
 
 Dinge, die mir beim Bauen aufgefallen sind. Nichts davon ist gemacht.
@@ -22,11 +29,10 @@ Dinge, die mir beim Bauen aufgefallen sind. Nichts davon ist gemacht.
    sinnvoll; gepflegt werden sie im Admin am Bild.
 3. **Bildunterschrift in der Großansicht.** Wix zeigt dort den Dateinamen
    (z. B. DSC01890.jpg). Hier erscheint die Beschreibung des Bildes, solange
-   sie leer ist also nichts. Siehe ABWEICHUNGEN.md, Punkt 6.
+   sie leer ist also nichts.
 4. **Sprechende Bildtitel.** Die Bilder heißen in der Bibliothek
    "Commercial 07" usw. Das erleichtert das Wiederfinden wenig.
-5. **Vorschaubild für die Cinemagramme.** Bis ein Video geladen ist, ist sein
-   Feld leer. Ein Standbild pro Video würde das überbrücken.
+5. **Vorschaubild für die Cinemagramme**, sobald sie wieder eingebunden sind.
 6. **Galerien der Startseite automatisch weiterlaufen lassen**, falls sie das
    bei Wix tun (konnte ich nicht sehen).
 7. **Suchmaschinen und Teilen:** Beschreibungstext pro Seite, Vorschaubild für
@@ -37,6 +43,13 @@ Dinge, die mir beim Bauen aufgefallen sind. Nichts davon ist gemacht.
 10. **Suche** unter /search/ stammt aus der Wagtail-Vorlage, ist ungestaltet
     und nirgends verlinkt: entfernen oder gestalten.
 11. **AVIF zusätzlich zu WebP** für noch kleinere Bilddateien.
+12. **Weiterleitungen von den alten Adressen.** /commercial/, /outdoor/ und
+    /other/ gibt es nicht mehr. Weiterleitungen auf /foto/?tag=commercial usw.
+    erhalten Google-Rankings und alte Links. Wagtail hat dafür eine Funktion
+    im Admin (Einstellungen → Weiterleitungen).
+13. **Collage beschneidet manche Fotos stark**, wenn es mehr Hochformate als
+    hohe Felder gibt. Abhilfe: Fokuspunkte setzen oder eine zweite
+    Baustein-Form für hochformatlastige Auswahl.
 
 ## Erledigt
 
