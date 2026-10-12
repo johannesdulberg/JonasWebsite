@@ -2,10 +2,21 @@
 
 ## Beschlossen, noch nicht umgesetzt
 
-- [ ] **Booking-Formular anschließen.** Das Formular (Name, E-Mail, Nachricht)
-  wird angezeigt, verschickt aber nichts und sagt das beim Absenden auch.
-  Offen: Nachricht speichern und per E-Mail zustellen, Spam-Schutz ohne
-  Fremddienst, Einwilligungs-Hinweis zum Datenschutz, Bestätigungsmeldung.
+- [ ] **Terminbuchung anschließen.** Die Oberfläche steht (Tag und Uhrzeit
+  wählen, dann Name und Telefonnummer), gebucht wird noch nichts. Die freien
+  Zeiten rechnet bisher das JavaScript aus festen Arbeitszeiten (Mo–Fr,
+  9–12 und 13–17 Uhr, alle 30 Minuten, 6 Wochen im Voraus, im Template unter
+  `data-hours`). Offen: Arbeitszeiten im Admin pflegen, Kalender der
+  Assistentin nur lesend einbinden (ICS-Link), belegte Zeiten ausblenden,
+  Buchung speichern, Bestätigung per E-Mail an beide Seiten, Spam-Schutz.
+- [ ] **Nachrichten-Formular anschließen.** Name, E-Mail, Nachricht; zeigt
+  beim Absenden nur einen Hinweis. Offen: speichern und per E-Mail zustellen,
+  Spam-Schutz ohne Fremddienst, Einwilligungs-Hinweis zum Datenschutz.
+- [ ] **Texte der Booking-Seite im Admin pflegbar machen.** Überschrift,
+  Untertitel ("15 Minuten · kostenlos & unverbindlich") usw. stehen vorerst im
+  Template. Die alten Felder der Seite (Einleitung, Bildreihe, Überschrift
+  Kontakt) zeigt die neue Seite nicht mehr an; beim Anschließen ersetzen oder
+  löschen.
 
 - [ ] **Inhalte für Video und Social.** Beide Seiten sind leere Textseiten.
 - [ ] **Cinemagramme wieder zeigen.** Sie lagen auf der alten Seite "Other",

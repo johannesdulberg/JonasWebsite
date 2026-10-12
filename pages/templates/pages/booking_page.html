@@ -1,49 +1,145 @@
 {% extends "base.html" %}
-{% load wagtailcore_tags %}
+{% load static %}
+
+{% comment %}
+Terminbuchung, vorerst nur Oberfläche: Die freien Zeiten erzeugt booking.js aus
+den Arbeitszeiten unten (data-hours), gebucht wird noch nichts. Siehe TODO.md.
+
+Die Texte stehen vorerst hier im Template. Sie werden im Admin pflegbar, wenn
+die Buchung angeschlossen wird.
+{% endcomment %}
 
 {% block content %}
 {% with site_settings=settings.core.SiteSettings %}
-<h1 class="sr-only">{{ page.title }}</h1>
+<div class="mx-auto max-w-md px-6 pb-8 pt-8 md:pt-14">
+    <div class="text-center">
+        <h1 class="text-3xl md:text-4xl">Lass uns telefonieren.</h1>
+        <p class="mt-3 text-muted">Wähl einen Termin, wir rufen dich an.<br>15 Minuten · kostenlos &amp; unverbindlich</p>
+    </div>
 
-{% if page.intro %}
-<div class="rich-text mx-auto max-w-3xl px-6 pb-10 pt-6 text-center sm:px-8 md:pt-10">{{ page.intro|richtext }}</div>
-{% endif %}
+    {#  Mo–Fr, 9–12 und 13–17 Uhr, alle 30 Minuten. Format: Wochentage (1 = Mo); Zeitfenster. #}
+    <div class="mt-10" data-booking data-hours="1,2,3,4,5;09:00-12:00,13:00-17:00" data-step="30" data-weeks="6">
 
-{% if strip_images %}
-<div class="mx-auto max-w-[980px]">
-    {% include "includes/gallery_strip.html" with items=strip_images size="small" label=page.title %}
-</div>
-{% endif %}
+        {# ---------------- Schritt 1: Tag und Uhrzeit ---------------- #}
+        <div data-booking-step="1">
+            <div class="text-sm">Tag</div>
+            <button type="button" data-booking-toggle="calendar" aria-expanded="false"
+                    class="mt-1.5 flex w-full items-center justify-between rounded-md border border-line bg-paper px-4 py-3 text-left transition-colors hover:border-ink aria-expanded:border-ink">
+                <span data-booking-day-label class="text-muted">Tag wählen</span>
+                <svg class="size-4 transition-transform [[aria-expanded=true]>&]:rotate-180" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M3 6l5 5 5-5"/></svg>
+            </button>
+            {# Ausklappbar: Höhe per grid-rows von 0fr auf 1fr, das lässt sich animieren. #}
+            <div data-booking-panel="calendar" class="grid grid-rows-[0fr] transition-[grid-template-rows] duration-300 ease-out data-open:grid-rows-[1fr]">
+                <div class="overflow-hidden">
+                    <div class="mt-2 rounded-md border border-line p-4">
+                        <div class="mb-3 flex items-center justify-between">
+                            <button type="button" data-booking-month="-1" aria-label="Vorheriger Monat" class="rounded p-1.5 hover:bg-black/5 disabled:opacity-25">
+                                <svg class="size-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M10 3L5 8l5 5"/></svg>
+                            </button>
+                            <span data-booking-month-label class="font-medium"></span>
+                            <button type="button" data-booking-month="1" aria-label="Nächster Monat" class="rounded p-1.5 hover:bg-black/5 disabled:opacity-25">
+                                <svg class="size-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M6 3l5 5-5 5"/></svg>
+                            </button>
+                        </div>
+                        <div class="grid grid-cols-7 text-center text-xs text-muted">
+                            <span>Mo</span><span>Di</span><span>Mi</span><span>Do</span><span>Fr</span><span>Sa</span><span>So</span>
+                        </div>
+                        <div data-booking-days class="mt-1 grid grid-cols-7 gap-1"></div>
+                    </div>
+                </div>
+            </div>
 
-<section class="mx-auto max-w-xl px-6 pt-14 sm:px-8 md:pt-20">
-    <h2 class="text-center text-xl uppercase tracking-[0.2em] md:text-2xl">{{ page.contact_heading }}</h2>
+            <div class="mt-5 text-sm">Uhrzeit</div>
+            <button type="button" data-booking-toggle="slots" aria-expanded="false" disabled
+                    class="mt-1.5 flex w-full items-center justify-between rounded-md border border-line bg-paper px-4 py-3 text-left transition-colors hover:border-ink disabled:cursor-not-allowed disabled:hover:border-line aria-expanded:border-ink">
+                <span data-booking-time-label class="text-muted">Erst einen Tag wählen</span>
+                <svg class="size-4 transition-transform [[aria-expanded=true]>&]:rotate-180" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M3 6l5 5 5-5"/></svg>
+            </button>
+            <div data-booking-panel="slots" class="grid grid-rows-[0fr] transition-[grid-template-rows] duration-300 ease-out data-open:grid-rows-[1fr]">
+                <div class="overflow-hidden">
+                    <div data-booking-slots class="mt-2 grid grid-cols-3 gap-2 rounded-md border border-line p-3 sm:grid-cols-4"></div>
+                </div>
+            </div>
 
-    <p class="mt-5 text-center leading-relaxed">
-        {% if site_settings.email %}<a class="underline underline-offset-4 transition-colors hover:text-accent" href="mailto:{{ site_settings.email }}">{{ site_settings.email }}</a><br>{% endif %}
-        {% if site_settings.phone %}<a class="transition-colors hover:text-accent" href="tel:{{ site_settings.phone|cut:' ' }}">{{ site_settings.phone }}</a>{% endif %}
-    </p>
-
-    {# Das Formular ist noch nicht angeschlossen (siehe TODO.md). site.js fängt das Absenden ab und sagt das auch. #}
-    <form class="mt-10 grid gap-5" data-inactive-form novalidate>
-        <label class="grid gap-1.5 text-sm">
-            Name
-            <input type="text" name="name" autocomplete="name" class="border border-ink bg-paper px-3 py-2.5 text-base outline-offset-2 focus-visible:outline-2 focus-visible:outline-accent">
-        </label>
-        <label class="grid gap-1.5 text-sm">
-            E-Mail
-            <input type="email" name="email" autocomplete="email" class="border border-ink bg-paper px-3 py-2.5 text-base outline-offset-2 focus-visible:outline-2 focus-visible:outline-accent">
-        </label>
-        <label class="grid gap-1.5 text-sm">
-            Nachricht
-            <textarea name="message" rows="6" class="border border-ink bg-paper px-3 py-2.5 text-base outline-offset-2 focus-visible:outline-2 focus-visible:outline-accent"></textarea>
-        </label>
-        <div>
-            <button type="submit" class="border border-ink px-8 py-2.5 text-sm uppercase tracking-[0.2em] transition-colors hover:border-accent hover:bg-accent hover:text-paper">Senden</button>
+            <button type="button" data-booking-next disabled
+                    class="mt-7 w-full rounded-md bg-accent py-3.5 font-medium text-paper transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40">
+                Weiter
+            </button>
         </div>
-        <p data-form-note hidden role="status" class="text-sm text-accent">
-            Das Formular ist noch nicht aktiv. Bitte melden Sie sich per E-Mail oder Telefon.
+
+        {# ---------------- Schritt 2: Kontaktdaten ---------------- #}
+        <form data-booking-step="2" hidden novalidate>
+            <div class="flex items-center justify-between gap-4 rounded-md bg-black/[0.04] px-4 py-3">
+                <div>
+                    <div class="text-xs uppercase tracking-wider text-muted">Telefonat</div>
+                    <div data-booking-summary class="font-medium"></div>
+                </div>
+                <button type="button" data-booking-back class="text-sm underline underline-offset-4 hover:text-accent">Ändern</button>
+            </div>
+            <div class="mt-6 grid gap-5">
+                <label class="grid gap-1.5 text-sm">
+                    Name
+                    <input type="text" name="name" autocomplete="name" required class="rounded-md border border-line px-4 py-3 text-base outline-none focus:border-ink">
+                </label>
+                <label class="grid gap-1.5 text-sm">
+                    Telefonnummer
+                    <input type="tel" name="phone" autocomplete="tel" required class="rounded-md border border-line px-4 py-3 text-base outline-none focus:border-ink">
+                </label>
+                <label class="grid gap-1.5 text-sm">
+                    <span>Worum geht es? <span class="text-muted">(optional)</span></span>
+                    <textarea name="topic" rows="3" class="rounded-md border border-line px-4 py-3 text-base outline-none focus:border-ink"></textarea>
+                </label>
+            </div>
+            <button type="submit" class="mt-7 w-full rounded-md bg-accent py-3.5 font-medium text-paper transition-opacity hover:opacity-90">Telefonat buchen</button>
+            <p data-booking-note hidden role="status" class="mt-4 text-center text-sm text-accent">
+                Die Buchung ist noch nicht aktiv. Bitte melde dich per E-Mail oder Telefon.
+            </p>
+        </form>
+    </div>
+
+    {# ---------------- Alternative: schreiben ---------------- #}
+    <div class="mt-12 flex items-center gap-4 text-sm text-muted">
+        <span class="h-px flex-1 bg-line"></span>oder<span class="h-px flex-1 bg-line"></span>
+    </div>
+
+    <div class="mt-6">
+        <button type="button" data-booking-toggle="message" aria-expanded="false"
+                class="flex w-full items-center justify-center gap-3 rounded-md border border-ink px-4 py-3.5 font-medium transition-colors hover:bg-ink hover:text-paper aria-expanded:bg-ink aria-expanded:text-paper">
+            <svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>
+            Lieber eine Nachricht schreiben
+        </button>
+        <div data-booking-panel="message" class="grid grid-rows-[0fr] transition-[grid-template-rows] duration-300 ease-out data-open:grid-rows-[1fr]">
+            <div class="overflow-hidden">
+                <form class="grid gap-5 pt-6" data-inactive-form novalidate>
+                    <label class="grid gap-1.5 text-sm">
+                        Name
+                        <input type="text" name="name" autocomplete="name" class="rounded-md border border-line px-4 py-3 text-base outline-none focus:border-ink">
+                    </label>
+                    <label class="grid gap-1.5 text-sm">
+                        E-Mail
+                        <input type="email" name="email" autocomplete="email" class="rounded-md border border-line px-4 py-3 text-base outline-none focus:border-ink">
+                    </label>
+                    <label class="grid gap-1.5 text-sm">
+                        Nachricht
+                        <textarea name="message" rows="5" class="rounded-md border border-line px-4 py-3 text-base outline-none focus:border-ink"></textarea>
+                    </label>
+                    <button type="submit" class="rounded-md bg-ink py-3.5 font-medium text-paper transition-opacity hover:opacity-90">Nachricht senden</button>
+                    <p data-form-note hidden role="status" class="text-center text-sm text-accent">
+                        Das Formular ist noch nicht aktiv. Bitte schreib direkt an die Adresse unten.
+                    </p>
+                </form>
+            </div>
+        </div>
+        {% if site_settings.email %}
+        <p class="mt-4 text-center text-sm text-muted">
+            oder direkt an <a class="text-ink underline underline-offset-4 hover:text-accent" href="mailto:{{ site_settings.email }}">{{ site_settings.email }}</a>
         </p>
-    </form>
-</section>
+        {% endif %}
+    </div>
+</div>
 {% endwith %}
 {% endblock content %}
+
+{% block extra_js %}
+<script src="{% static 'js/booking.js' %}" defer></script>
+{% endblock %}

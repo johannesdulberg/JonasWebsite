@@ -8,8 +8,8 @@ Funktionen und ein einfacher Weg zur Buchung ("Hemmschwelle gegen null").
 
 | Nr. | Wunsch | Sinnvoll | Aufwand | Status |
 | --- | --- | --- | --- | --- |
-| 1 | **Termin direkt buchen**, automatisch, ohne Anruf (das Wichtigste) | sehr | mittel | offen. Tendenz: selbst gebaut, Arbeitszeiten der Assistentin plus ihr Kalender nur lesend; Entwürfe 1–3 liegen vor |
-| 2 | **Booking-Seite einladender**, Formular, das zum Schreiben einlädt | sehr | klein bis mittel | offen |
+| 1 | **Termin direkt buchen**, automatisch, ohne Anruf (das Wichtigste) | sehr | mittel | Oberfläche umgesetzt (12.10.2026): Telefonat buchen, Kalender und Uhrzeiten klappen aus; noch ohne Funktion. Tendenz: selbst gebaut, Arbeitszeiten der Assistentin plus ihr Kalender nur lesend |
+| 2 | **Booking-Seite einladender**, Formular, das zum Schreiben einlädt | sehr | klein bis mittel | Oberfläche umgesetzt (12.10.2026): auffälliger Knopf "Lieber eine Nachricht schreiben", Formular noch ohne Funktion |
 | 3 | **Neues Menü:** Home, Foto, Video, Social, Booking, About | ja | klein | umgesetzt (12.10.2026), Video und Social noch leer |
 | 4 | **Foto-Bibliothek:** eine Seite mit allen Fotos, 4–5 Tags zum Filtern (z. B. Outdoor, Commercial), ohne Filter gemischt | ja | klein bis mittel | umgesetzt (12.10.2026), Design offen |
 | 5 | **Mobile First**, professioneller, "cooler" | selbstverständlich | läuft mit | offen |
