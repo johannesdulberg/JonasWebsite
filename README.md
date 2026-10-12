@@ -47,7 +47,7 @@ Das CSS kommt von Tailwind. Der Container `tailwind` beobachtet die Templates un
 - **About, Booking, Impressum:** Texte direkt auf der jeweiligen Seite. E-Mail und Telefon auf der Booking-Seite kommen aus den Einstellungen.
 - **Kopf- und Fußzeile:** im Admin unter Einstellungen → Kopf- und Fußzeile (Name, Untertitel, Kontakt, Social Media, Impressum-Link, Download). Bei Social-Media-Links eine Plattform wählen, dann erscheint das Icon; ohne Plattform wird es ein Textlink.
 
-Wo der Nachbau bewusst von der Wix-Seite abweicht, steht in [ABWEICHUNGEN.md](ABWEICHUNGEN.md). Offene Aufgaben und Vorschläge stehen in [TODO.md](TODO.md).
+Wo der Nachbau bewusst von der Wix-Seite abweicht, steht in [ABWEICHUNGEN.md](ABWEICHUNGEN.md). Offene Aufgaben und Vorschläge stehen in [TODO.md](TODO.md). Die Wünsche von Jonas stehen getrennt davon in [WUENSCHE.md](WUENSCHE.md).
 
 ## Tests
 
