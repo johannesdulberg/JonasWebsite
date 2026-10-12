@@ -32,6 +32,25 @@ class HeaderFooterTests(TestCase):
         self.assertEqual(nav.count('aria-current="page"'), 1)
         self.assertRegex(nav, r'aria-current="page">Commercial</a>')
 
+    def test_booking_page_becomes_button(self):
+        termin = self.home.add_child(
+            instance=HomePage(title="Booking", slug="booking", show_in_menus=True)
+        )
+        settings = SiteSettings.for_site(self.site)
+        settings.booking_page = Page.objects.get(pk=termin.pk)
+        settings.save()
+
+        html = self.client.get("/commercial/").content.decode()
+        nav = html[html.index('id="main-nav"') : html.index("</nav>")]
+        self.assertNotIn(">Booking</a>", nav)
+        self.assertIn("data-booking-button", nav)
+        self.assertEqual(html.count('href="/booking/"'), 2)  # Menü und über der Fußzeile
+
+        html = self.client.get("/booking/").content.decode()
+        self.assertEqual(html.count('href="/booking/"'), 1)  # nur im Menü, als aktiv markiert
+        self.assertIn("Lust auf ein Shooting?", self.client.get("/").content.decode())
+        self.assertNotIn("Lust auf ein Shooting?", html)
+
     def test_footer_shows_settings(self):
         settings = SiteSettings.for_site(self.site)
         settings.contact_name = "Max Mustermann"

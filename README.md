@@ -45,7 +45,7 @@ Das CSS kommt von Tailwind. Der Container `tailwind` beobachtet die Templates un
 - **Video und Social:** vorerst einfache Textseiten, bis feststeht, was dort hinkommt.
 - **About, Impressum:** Texte direkt auf der jeweiligen Seite.
 - **Booking:** Die Texte stehen vorerst im Template und sind noch nicht im Admin pflegbar (siehe TODO.md). Die E-Mail-Adresse kommt aus den Einstellungen.
-- **Kopf- und Fußzeile:** im Admin unter Einstellungen → Kopf- und Fußzeile (Name, Untertitel, Kontakt, Social Media, Impressum-Link, Download). Bei Social-Media-Links eine Plattform wählen, dann erscheint das Icon; ohne Plattform wird es ein Textlink.
+- **Kopf- und Fußzeile:** im Admin unter Einstellungen → Kopf- und Fußzeile (Name, Untertitel, Termin-Knopf, Kontakt, Social Media, Impressum-Link, Download). Der Termin-Knopf führt zur dort gewählten Seite; er steht rechts im Menü und über der Fußzeile, die Seite selbst nicht mehr als normaler Menüpunkt. Bei Social-Media-Links eine Plattform wählen, dann erscheint das Icon; ohne Plattform wird es ein Textlink.
 
 Offene Aufgaben und Vorschläge stehen in [TODO.md](TODO.md). Die Wünsche von Jonas stehen getrennt davon in [WUENSCHE.md](WUENSCHE.md).
 

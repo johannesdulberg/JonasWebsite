@@ -43,7 +43,31 @@ class SiteSettings(BaseSiteSetting, ClusterableModel):
 
     brand_name = models.CharField("Name", max_length=100, default="Jonas Dülberg")
     tagline = models.CharField(
-        "Untertitel", max_length=150, blank=True, default="Outdoor- und Werbefotografie"
+        "Untertitel",
+        max_length=150,
+        blank=True,
+        default="Outdoor- und Werbefotografie",
+        help_text="Erscheint nur auf größeren Bildschirmen, auf dem Handy nicht.",
+    )
+
+    booking_page = models.ForeignKey(
+        "wagtailcore.Page",
+        verbose_name="Seite",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="+",
+        help_text="Der Knopf führt hierhin. Die Seite steht dann nicht mehr als normaler Menüpunkt im Menü.",
+    )
+    booking_button_text = models.CharField("Text auf dem Knopf", max_length=40, default="Termin buchen")
+    booking_cta_heading = models.CharField(
+        "Überschrift über der Fußzeile", max_length=100, blank=True, default="Lust auf ein Shooting?"
+    )
+    booking_cta_text = models.CharField(
+        "Text über der Fußzeile",
+        max_length=200,
+        blank=True,
+        default="Kurzes Telefonat, kostenlos & unverbindlich.",
     )
 
     contact_name = models.CharField("Name / Firma", max_length=100, blank=True)
@@ -83,6 +107,16 @@ class SiteSettings(BaseSiteSetting, ClusterableModel):
         MultiFieldPanel(
             [FieldPanel("brand_name"), FieldPanel("tagline")],
             heading="Kopfzeile",
+        ),
+        MultiFieldPanel(
+            [
+                FieldPanel("booking_page"),
+                FieldPanel("booking_button_text"),
+                FieldPanel("booking_cta_heading"),
+                FieldPanel("booking_cta_text"),
+            ],
+            heading="Termin-Knopf",
+            help_text="Knopf rechts im Menü und über der Fußzeile (nicht auf der Seite selbst).",
         ),
         MultiFieldPanel(
             [

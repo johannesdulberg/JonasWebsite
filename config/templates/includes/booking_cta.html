@@ -1,0 +1,19 @@
+{% load wagtailcore_tags core_tags %}
+{% booking_cta as cta_page %}
+{% if cta_page %}
+{% with site_settings=settings.core.SiteSettings %}
+{# Aufruf über der Fußzeile, auf allen Seiten außer der Termin-Seite selbst. Texte unter Einstellungen -> Kopf- und Fußzeile. #}
+<section class="mx-auto mt-24 w-full max-w-screen-2xl px-6 sm:px-8 md:px-10" aria-label="{{ site_settings.booking_button_text }}">
+    <div class="border-t border-line pt-14 text-center">
+        {% if site_settings.booking_cta_heading %}
+        <h2 class="text-2xl md:text-3xl">{{ site_settings.booking_cta_heading }}</h2>
+        {% endif %}
+        {% if site_settings.booking_cta_text %}
+        <p class="mt-2 text-muted">{{ site_settings.booking_cta_text }}</p>
+        {% endif %}
+        <a href="{% pageurl cta_page %}"
+           class="mt-6 inline-block rounded-full bg-accent px-8 py-3.5 font-medium text-paper transition-opacity hover:opacity-90">{{ site_settings.booking_button_text }}</a>
+    </div>
+</section>
+{% endwith %}
+{% endif %}

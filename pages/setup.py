@@ -83,5 +83,8 @@ def ensure_pages(site, log=lambda message: None):
     if settings.legal_page_id is None and "impressum" in result:
         settings.legal_page = Page.objects.get(pk=result["impressum"].pk)
         settings.save()
+    if settings.booking_page_id is None and "booking" in result:
+        settings.booking_page = Page.objects.get(pk=result["booking"].pk)
+        settings.save()
 
     return result
