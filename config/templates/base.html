@@ -37,6 +37,8 @@
         <a href="#inhalt" class="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:bg-paper focus:px-3 focus:py-2">Zum Inhalt springen</a>
 
         {% include "includes/header.html" %}
+        {# Trennlinie unter der Kopfzeile, bisher nur auf der Foto-Seite. #}
+        {% block header_divider %}{% endblock %}
 
         <main id="inhalt" class="flex-1">
             {% block content %}{% endblock %}

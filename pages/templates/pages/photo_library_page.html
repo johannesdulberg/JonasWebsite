@@ -1,9 +1,11 @@
 {% extends "base.html" %}
 {% load wagtailcore_tags core_tags %}
 
+{% block header_divider %}<hr class="border-line">{% endblock %}
+
 {% block content %}
 <div class="mx-auto max-w-7xl px-1.5 md:px-10">
-    <div class="px-4.5 pb-5 pt-4 md:px-0 md:pt-8">
+    <div class="px-4.5 pb-5 pt-8 md:px-0 md:pt-12">
         <h1 class="text-2xl font-bold md:text-3xl">{{ page.title }}</h1>
         {% if page.intro %}<div class="rich-text mt-2 max-w-2xl text-muted">{{ page.intro|richtext }}</div>{% endif %}
 

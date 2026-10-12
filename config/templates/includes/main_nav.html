@@ -1,19 +1,18 @@
 {% load wagtailcore_tags %}
-{# Ab md: Menüpunkte mittig, der Termin-Knopf ganz rechts. Auf dem Handy steht der Knopf unter der Liste. #}
-<div class="md:grid md:grid-cols-[1fr_auto_1fr] md:items-center md:gap-6">
-    <span class="hidden md:block" aria-hidden="true"></span>
-    <ul class="flex flex-col gap-y-5 md:flex-row md:flex-wrap md:justify-center md:gap-x-10 md:gap-y-3">
-        {% for item in items %}
-        <li>
-            <a href="{% pageurl item.page %}"
-               class="text-base uppercase tracking-wide transition-colors hover:text-accent md:text-sm {% if item.active %}text-accent{% endif %}"
-               {% if item.active %}aria-current="page"{% endif %}>{{ item.page.title }}</a>
-        </li>
-        {% endfor %}
-    </ul>
+{# Der Termin-Knopf ist der letzte Menüpunkt: am Desktop in der Zeile, auf dem Handy breit unter der Liste. #}
+<ul class="flex flex-col gap-y-5 md:flex-row md:flex-wrap md:items-center md:justify-center md:gap-x-10 md:gap-y-3">
+    {% for item in items %}
+    <li>
+        <a href="{% pageurl item.page %}"
+           class="text-base uppercase tracking-wide transition-colors hover:text-accent md:text-sm {% if item.active %}text-accent{% endif %}"
+           {% if item.active %}aria-current="page"{% endif %}>{{ item.page.title }}</a>
+    </li>
+    {% endfor %}
     {% if booking %}
-    <a href="{% pageurl booking %}" data-booking-button
-       class="mt-8 block rounded-md border border-accent py-3.5 text-center font-medium transition-colors md:mt-0 md:justify-self-end md:whitespace-nowrap md:rounded-full md:px-5 md:py-2 md:text-sm {% if booking_active %}text-accent hover:bg-accent hover:text-paper{% else %}bg-accent text-paper hover:opacity-90{% endif %}"
-       {% if booking_active %}aria-current="page"{% endif %}>{{ booking_text }}</a>
+    <li class="mt-3 md:mt-0">
+        <a href="{% pageurl booking %}" data-booking-button
+           class="block rounded-md border border-accent py-3.5 text-center font-medium transition-colors md:whitespace-nowrap md:rounded-full md:px-5 md:py-2 md:text-sm {% if booking_active %}text-accent hover:bg-accent hover:text-paper{% else %}bg-accent text-paper hover:opacity-90{% endif %}"
+           {% if booking_active %}aria-current="page"{% endif %}>{{ booking_text }}</a>
+    </li>
     {% endif %}
-</div>
+</ul>
